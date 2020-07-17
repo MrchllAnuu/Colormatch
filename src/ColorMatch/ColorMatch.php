@@ -71,13 +71,9 @@ class ColorMatch extends PluginBase implements Listener{
         if(!is_file($this->getDataFolder()."languages/English.yml")){
                 $this->saveResource("languages/English.yml");
         }
-        if(!is_file($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml")){
-            $this->msg = new Config($this->getDataFolder()."languages/English.yml", Config::YAML);
-            $this->getServer()->getLogger()->info("Selected language: English");
-        }
-        else{
+        if(is_file($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml")) {
             $this->msg = new Config($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml", Config::YAML);
-            $this->getServer()->getLogger()->info("Selected language: {$this->cfg->get('Language')}");
+            $this->getServer()->getLogger()->info("[ColorMatch] Selected language: {$this->cfg->get('Language')}");
         }
     }
     
@@ -736,15 +732,16 @@ class ColorMatch extends PluginBase implements Listener{
     }
     
     public function registerEconomy(){
-        $economy = ["EconomyAPI", "PocketMoney", "MassiveEconomy"];
+        $economy = ["EconomyAPI", "PocketMoney"];
         foreach($economy as $plugin){
             $ins = $this->getServer()->getPluginManager()->getPlugin($plugin);
             if($ins instanceof Plugin && $ins->isEnabled()){
                 $this->economy = $ins;
-                $this->getServer()->getLogger()->info("Hooked economy into $plugin");
+                $this->getServer()->getLogger()->info("[ColorMatch] Hooked economy into $plugin");
                 return;
             }
         }
         $this->economy = null;
+        $this->getServer()->getLogger()->info("[ColorMatch] No economy plugin found.");
     }
 }
