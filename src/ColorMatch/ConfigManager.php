@@ -53,6 +53,10 @@ class ConfigManager{
         $this->arena->setNested('arena.arena_world', $type);
         $this->arena->save();
     }
+    public function setEcoReward($data){
+        $this->arena->setNested('arena.money_reward', $data);
+        $this->arena->save();
+    }
     public function setJoinPos($x, $y, $z){
         $this->arena->setNested('arena.join_position_x', $x);
         $this->arena->setNested('arena.join_position_y', $y);

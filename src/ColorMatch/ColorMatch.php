@@ -32,6 +32,7 @@ class ColorMatch extends PluginBase implements Listener{
     public $setters = [];
     
     public $economy;
+    public $getFile;
     
     public function onEnable(){
         $this->initConfig();
@@ -41,16 +42,11 @@ class ColorMatch extends PluginBase implements Listener{
         if(!$this->getServer()->isLevelGenerated($this->cfg->getNested('lobby.world'))){
             $this->getServer()->generateLevel($this->cfg->getNested('lobby.world'));
         }
-        $this->getLogger()->info(TextFormat::GREEN."ColorMatch enabled");
-    }
-    
-    public function onDisable(){
-        $this->getLogger()->info(TextFormat::RED."ColorMatch disabled");
     }
     
     public function setArenasData(Config $arena, $name){
         $this->arenas[$name] = $arena->getAll();
-        $this->arenas[$name]['enable'] = true;
+        $this->arenas[$name]['enabled'] = true;
         $game = new Arena($name, $this);
         $game->enableScheduler();
         $this->ins[$name] = $game;
@@ -75,16 +71,13 @@ class ColorMatch extends PluginBase implements Listener{
         if(!is_file($this->getDataFolder()."languages/English.yml")){
                 $this->saveResource("languages/English.yml");
         }
-        if(!is_file($this->getDataFolder()."languages/Czech.yml")){
-                $this->saveResource("languages/Czech.yml");
-        }
         if(!is_file($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml")){
             $this->msg = new Config($this->getDataFolder()."languages/English.yml", Config::YAML);
-            $this->getServer()->getLogger()->info("Selected language English");
+            $this->getServer()->getLogger()->info("Selected language: English");
         }
         else{
             $this->msg = new Config($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml", Config::YAML);
-            $this->getServer()->getLogger()->info("Selected language {$this->cfg->get('Language')}");
+            $this->getServer()->getLogger()->info("Selected language: {$this->cfg->get('Language')}");
         }
     }
     
@@ -94,7 +87,9 @@ class ColorMatch extends PluginBase implements Listener{
             $arena = new Config($file, Config::YAML);
             if(strtolower($arena->get("enabled")) === "false"){
                 $this->arenas[basename($file, ".yml")] = $arena->getAll();
-                $this->arenas[basename($file, ".yml")]['enable'] = false;
+                $this->arenas[basename($file, ".yml")]['enabled'] = false;
+                $fname = basename($file);
+                $this->getLogger()->error("Arena \"$fname\" is currently disabled.");
             }
             else{
                 if($this->checkFile($arena) === true){
@@ -104,7 +99,7 @@ class ColorMatch extends PluginBase implements Listener{
                 }
                 else{
                     $this->arenas[basename($file, ".yml")] = $arena->getAll();
-                    $this->arenas[basename($file, ".yml")]['enable'] = false;
+                    $this->arenas[basename($file, ".yml")]['enabled'] = 'false';
                     //$this->setArenasData($arena, basename($file, ".yml"), false);
                     $fname = basename($file, ".yml");
                     $this->getLogger()->error("Arena \"$fname\" is not set properly");
@@ -114,17 +109,18 @@ class ColorMatch extends PluginBase implements Listener{
     }
     
     public function checkFile(Config $arena){
-        if(!(is_numeric($arena->getNested("signs.join_sign_x")) && is_numeric($arena->getNested("signs.join_sign_y")) && is_numeric($arena->getNested("signs.join_sign_z")) && is_string($arena->getNested("signs.join_sign_world")) && is_string($arena->getNested("signs.status_line_1")) && is_string($arena->getNested("signs.status_line_2")) && is_string($arena->getNested("signs.status_line_3")) && is_string($arena->getNested("signs.status_line_4")) && is_numeric($arena->getNested("signs.return_sign_x")) && is_numeric($arena->getNested("signs.return_sign_y")) && is_numeric($arena->getNested("signs.return_sign_z")) && is_string($arena->getNested("arena.arena_world")) && is_numeric($arena->getNested("arena.join_position_x")) && is_numeric($arena->getNested("arena.join_position_y")) && is_numeric($arena->getNested("arena.join_position_z")) && is_numeric($arena->getNested("arena.lobby_position_x")) && is_numeric($arena->getNested("arena.lobby_position_y")) && is_numeric($arena->getNested("arena.lobby_position_z")) && is_numeric($arena->getNested("arena.first_corner_x")) && is_numeric($arena->getNested("arena.first_corner_z")) && is_numeric($arena->getNested("arena.second_corner_x")) && is_numeric($arena->getNested("arena.second_corner_z")) && is_numeric($arena->getNested("arena.spec_spawn_x")) && is_numeric($arena->getNested("arena.spec_spawn_y")) && is_numeric($arena->getNested("arena.spec_spawn_z")) && is_numeric($arena->getNested("arena.leave_position_x")) && is_numeric($arena->getNested("arena.leave_position_y")) && is_numeric($arena->getNested("arena.leave_position_z")) && is_string($arena->getNested("arena.leave_position_world")) && is_numeric($arena->getNested("arena.max_game_time")) && is_numeric($arena->getNested("arena.max_players")) && is_numeric($arena->getNested("arena.min_players")) && is_numeric($arena->getNested("arena.starting_time")) && is_numeric($arena->getNested("arena.color_wait_time")) && is_numeric($arena->getNested("arena.floor_y")) && is_string($arena->getNested("arena.finish_msg_levels")) && !is_string($arena->getNested("arena.money_reward")))){
+        if(!(is_numeric($arena->getNested("signs.join_sign_x")) && is_numeric($arena->getNested("signs.join_sign_y")) && is_numeric($arena->getNested("signs.join_sign_z")) && is_string($arena->getNested("signs.join_sign_world")) && is_string($arena->getNested("signs.status_line_1")) && is_string($arena->getNested("signs.status_line_2")) && is_string($arena->getNested("signs.status_line_3")) && is_string($arena->getNested("signs.status_line_4")) && is_numeric($arena->getNested("signs.return_sign_x")) && is_numeric($arena->getNested("signs.return_sign_y")) && is_numeric($arena->getNested("signs.return_sign_z")) && is_string($arena->getNested("arena.arena_world")) && is_numeric($arena->getNested("arena.join_position_x")) && is_numeric($arena->getNested("arena.join_position_y")) && is_numeric($arena->getNested("arena.join_position_z")) && is_numeric($arena->getNested("arena.lobby_position_x")) && is_numeric($arena->getNested("arena.lobby_position_y")) && is_numeric($arena->getNested("arena.lobby_position_z")) && is_numeric($arena->getNested("arena.first_corner_x")) && is_numeric($arena->getNested("arena.first_corner_z")) && is_numeric($arena->getNested("arena.second_corner_x")) && is_numeric($arena->getNested("arena.second_corner_z")) && is_numeric($arena->getNested("arena.spec_spawn_x")) && is_numeric($arena->getNested("arena.spec_spawn_y")) && is_numeric($arena->getNested("arena.spec_spawn_z")) && is_numeric($arena->getNested("arena.leave_position_x")) && is_numeric($arena->getNested("arena.leave_position_y")) && is_numeric($arena->getNested("arena.leave_position_z")) && is_string($arena->getNested("arena.leave_position_world")) && is_numeric($arena->getNested("arena.max_game_time")) && is_numeric($arena->getNested("arena.max_players")) && is_numeric($arena->getNested("arena.min_players")) && is_numeric($arena->getNested("arena.starting_time")) && is_numeric($arena->getNested("arena.color_wait_time")) && is_numeric($arena->getNested("arena.floor_y")) && is_string($arena->getNested("arena.finish_msg_levels")) && is_numeric($arena->getNested("arena.money_reward")))){
             return false;
         }
-        if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "clay") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (strtolower($arena->getNested("arena.time")) == "true" || strtolower($arena->getNested("arena.time")) == "day" || strtolower($arena->getNested("arena.time")) == "night" || is_numeric(strtolower($arena->getNested("arena.time")))) && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))){
+        if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "clay" || strtolower($arena->get("material")) == "glass" || strtolower($arena->get("material")) == "concrete") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (strtolower($arena->getNested("arena.time")) == "true" || strtolower($arena->getNested("arena.time")) == "day" || strtolower($arena->getNested("arena.time")) == "night" || is_numeric(strtolower($arena->getNested("arena.time")))) && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))){
             return false;
         }
         return true;
     }
     
     public function onCommand(CommandSender $sender, Command $cmd, $label, array $args): bool {
-            if(strtolower($cmd->getName()) == "cm"){
+        switch($cmd->getName()){
+            case "cm":
                     if(isset($args[0])){
                         if($sender instanceof Player){
                         switch(strtolower($args[0])){
@@ -169,7 +165,7 @@ class ColorMatch extends PluginBase implements Listener{
                                     $sender->sendMessage($this->getMsg('has_not_permission'));
                                     break;
                                 }
-                                $msg = "Â§9--- Â§cÂ§lColorMatch helpÂ§lÂ§9 ---Â§rÂ§f";
+                                $msg = "§9--- §c§lColorMatch help§l§9 ---§r§f";
                                 if($sender->hasPermission('cm.command.lobby')) $msg .= $this->getMsg('lobby');
                                 if($sender->hasPermission('cm.command.leave')) $msg .= $this->getMsg('onleave');
                                 if($sender->hasPermission('cm.command.join')) $msg .= $this->getMsg('onjoin');
@@ -229,12 +225,18 @@ class ColorMatch extends PluginBase implements Listener{
                                     $sender->sendMessage($this->getPrefix().$this->getMsg('arena_doesnt_exist'));
                                     break;
                                 }
-                                if($this->arenas[$args[1]]['enable'] === false){
-                                    $sender->sendMessage($this->getPrefix().$this->getMsg('arena_doesnt_exist'));
+                                $this->getFile = new Config($this->getDataFolder()."arenas/$args[1].yml", Config::YAML);
+                                if ($this->getFile->get('enabled') === 'false'){
+                                    $sender->sendMessage($this->getPrefix().$this->getMsg('arena_not_enabled'));
                                     break;
                                 }
-                                $this->ins[$args[1]]->joinToArena($sender);
-                                break;
+                                    $this->getFile = new Config($this->getDataFolder()."arenas/$args[1].yml", Config::YAML);
+                                    if ($this->getFile->get('enabled') === 'true') {
+                                        $this->ins[$args[1]]->joinToArena($sender);
+                                        break;
+                                    }
+
+
                             case "leave":
                                 if(!$sender->hasPermission('cm.command.leave')){
                                     $sender->sendMessage($this->getMsg ('has_not_permission'));
@@ -264,18 +266,20 @@ class ColorMatch extends PluginBase implements Listener{
                                         $sender->sendMessage($this->getPrefix().$this->getMsg('arena_doesnt_exist'));
                                         break;
                                     }
-                                    $this->ins[$args[1]]->startGame();
-                                    break;
                                 }
-                                if($this->getPlayerArena($sender) === false){
-                                    $sender->sendMessage($this->getPrefix().$this->getMsg('start_help'));
-                                    break;
+                                foreach ($this->ins as $arena) {
+                                    $players = count(array_merge($arena->ingamep, $arena->lobbyp, $arena->spec));
+                                    if ($players === 0) {
+                                        $sender->sendMessage($this->getPrefix().$this->getMsg('no_players'));
+                                        break;
+                                    } else {
+                                        $this->ins[$args[1]]->startGame();
+                                        break;
+                                    }
                                 }
-                                $this->getPlayerArena($sender)->startGame();
-                                break;
                             case "stop":
-                                if(!$sender->hasPermission('cm.command.start')){
-                                    $sender->sendMessage($this->plugin->getMsg('has_not_permission'));
+                                if(!$sender->hasPermission('cm.command.stop')){
+                                    $sender->sendMessage($this->getPrefix().$this->getMsg('has_not_permission'));
                                     break;
                                 }
                                 if(isset($args[2])){
@@ -287,15 +291,29 @@ class ColorMatch extends PluginBase implements Listener{
                                         $sender->sendMessage($this->getPrefix().$this->getMsg('arena_doesnt_exist'));
                                         break;
                                     }
-                                    $this->ins[$args[1]]->stopGame();
-                                    break;
                                 }
-                                if($this->getPlayerArena($sender) === false){
-                                    $sender->sendMessage($this->getPrefix().$this->getMsg('stop_help'));
-                                    break;
-                                }
-                                $this->getPlayerArena($sender)->stopGame();
+                                foreach ($this->ins as $ptest) {
+                                    $players = count(array_merge($ptest->ingamep, $ptest->lobbyp, $ptest->spec));
+                                    if ($players === 0) {
+                                        if(!isset($args[1])) {
+                                            $sender->sendMessage($this->getPrefix() . $this->getMsg('stop_help'));
+                                            break;
+                                        } else {
+                                            $sender->sendMessage($this->getPrefix() . $this->getMsg('no_players'));
+                                            break;
+                                        }
+                                    } elseif ($players !== 0) {
+                                        if(!isset($args[1])) {
+                                            $sender->sendMessage($this->getPrefix() . $this->getMsg('stop_help'));
+                                            break;
+                                        } else {
+                                                $this->ins[$args[1]]->abruptStop();
+                                                break;
+                                            }
+                                        }
+                                    }
                                 break;
+
                             //TO-DO case "ban":
                             case "kick": // cm kick [arena] [player] [reason]
                                 if(!$sender->hasPermission('cm.command.kick')){
@@ -330,15 +348,15 @@ class ColorMatch extends PluginBase implements Listener{
                             default:
                                 $sender->sendMessage($this->getPrefix().$this->getMsg('help'));
                         }
-                        return;
+                        return true;
                         }
-                        $sender->sendMessage('run command only in-game');
-                        return;
+                        $sender->sendMessage('You can only run this command only in-game.');
+                        return false;
                     }
                     $sender->sendMessage($this->getPrefix().$this->getMsg('help'));
             }
+            return true;
     }
-    
     public function arenaExist($name){
         if(isset($this->arenas[$name])){
             return true;
@@ -348,7 +366,7 @@ class ColorMatch extends PluginBase implements Listener{
     
     public function getMsg($key){
         $msg = $this->msg;
-        return str_replace("&", "Â§", $msg->get($key));
+        return str_replace("&", "§", $msg->get($key));
     }
     
     public function onBlockTouch(PlayerInteractEvent $e){
@@ -360,7 +378,7 @@ class ColorMatch extends PluginBase implements Listener{
     }
     
     public function getPrefix(){
-        return str_replace("&", "Â§", $this->cfg->get('Prefix'));
+        return str_replace("&", "§", $this->cfg->get('Prefix'));
     }
     
     public function loadInvs(){
@@ -502,26 +520,28 @@ class ColorMatch extends PluginBase implements Listener{
                             . $this->getMsg('help_colortime')
                             . $this->getMsg('help_type')
                             . $this->getMsg('help_material')
+                            . $this->getMsg('help_ecoreward')
                             . $this->getMsg('help_allowstatus')
-                            . $this->getMsg('help_world')
                             . $this->getMsg('help_statusline');
                     $help3 = $this->getMsg('help_allowspectator')
                             . $this->getMsg('help_signupdatetime')
                             . $this->getMsg('help_maxtime')
+                            . $this->getMsg('help_starttime')
                             . $this->getMsg('help_maxplayers')
-                            . $this->getMsg('help_minplayers');
+                            . $this->getMsg('help_minplayers')
+                            . $this->getMsg('help_enable');
                     $helparray = [$help1, $help2, $help3];
                     if(isset($args[1])){
                         if(intval($args[1]) >= 1 && intval($args[1]) <= 3){
-                            $help = "Â§9--- Â§6Â§lColorMatch setup helpÂ§l $args[1]/3Â§9 ---Â§rÂ§f";
+                            $help = "§9--- §6§lColorMatch setup help§l $args[1]/3§9 ---§r§f";
                             $help .= $helparray[intval(intval($args[1]) - 1)];
                             $p->sendMessage($help);
                             return;
                         }
-                        $p->sendMessage($this->getPrefix()."Â§6use: Â§ahelp Â§b[page 1-3]");
+                        $p->sendMessage($this->getPrefix()."§6use: §ahelp §b[page 1-3]");
                         return;
                     }
-                    $p->sendMessage("Â§9--- Â§6Â§lColorMatch setup helpÂ§l 1/3Â§9 ---Â§rÂ§f".$help1);
+                    $p->sendMessage("§9--- §6§lColorMatch setup help§l 1/3§9 ---§r§f".$help1);
                     return;
                 }
             }
@@ -560,7 +580,7 @@ class ColorMatch extends PluginBase implements Listener{
                 return;
             }
             elseif(strpos($msg, 'material') === 0){
-                if(substr($msg, 9) === 'wool' || substr($msg, 9) === 'clay'){
+                if(substr($msg, 9) === 'wool' || substr($msg, 9) === 'clay' || substr($msg, 9) === 'glass' || substr($msg, 9) === 'concrete'){
                     $arena->setMaterial(substr($msg, 9));
                     $p->sendMessage($this->getPrefix().$this->getMsg('material'));
                     return;
@@ -639,10 +659,18 @@ class ColorMatch extends PluginBase implements Listener{
                 $arena->setColorTime(substr($msg, 10));
                 $p->sendMessage($this->getPrefix().$this->getMsg('colortime'));
             }
+            elseif(strpos($msg, 'ecoreward') === 0){
+                if(!is_numeric(substr($msg, 10))){
+                    $p->sendMessage($this->getPrefix().$this->getMsg('ecoreward_help'));
+                    return;
+                }
+                $arena->setEcoReward(substr($msg, 10));
+                $p->sendMessage($this->getPrefix().$this->getMsg('ecoreward'));
+            }
             elseif(strpos($msg, 'time') === 0){
                 if(substr($msg, 5) === 'true' || substr($msg, 5) === 'day' || substr($msg, 5) === 'night' || is_numeric(substr($msg, 5))){
                     $arena->setTime(substr($msg, 5));
-                    $p->sendMessage($this->getPrefix().$this->getMsg('time'));
+                    $p->sendMessage($this->getPrefix().$this->getMsg('ecoreward'));
                     return;
                 }
                 $p->sendMessage($this->getPrefix().$this->getMsg('time_help'));
@@ -682,16 +710,14 @@ class ColorMatch extends PluginBase implements Listener{
         if(isset($this->ins[$name])) $this->ins[$name]->setup = false;
         if(!$this->checkFile($arena) || $arena->get('enabled') === "false"){
             $this->arenas[$name] = $arena->getAll();
-            $this->arenas[$name]['enable'] = 'false';
+            $this->arenas[$name]['enabled'] = 'false';
             return;
         }
-        if($this->arenas[$name]['enable'] === 'false'){
+        if($this->arenas[$name]['enabled'] === 'false'){
             $this->setArenasData($arena, $name);
             return;
         }
         $this->arenas[$name] = $arena->getAll();
-        $this->arenas[$name]['enable'] = 'true';
-        $this->ins[$name]->data = $this->arenas[$name];
     }
     
     public function getPlayerArena(Player $p){
@@ -710,12 +736,12 @@ class ColorMatch extends PluginBase implements Listener{
     }
     
     public function registerEconomy(){
-        $economy = ["EconomyAPI", "PocketMoney", "MassiveEconomy", "GoldStd"];
+        $economy = ["EconomyAPI", "PocketMoney", "MassiveEconomy"];
         foreach($economy as $plugin){
             $ins = $this->getServer()->getPluginManager()->getPlugin($plugin);
             if($ins instanceof Plugin && $ins->isEnabled()){
                 $this->economy = $ins;
-                $this->getServer()->getLogger()->info("Selected economy plugin: $plugin");
+                $this->getServer()->getLogger()->info("Hooked economy into $plugin");
                 return;
             }
         }

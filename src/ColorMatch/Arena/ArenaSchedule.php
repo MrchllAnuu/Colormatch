@@ -59,11 +59,18 @@ class ArenaSchedule extends Task{
         }
         
         if($this->arena->game === 0){
-            if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true){
+            if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true) {
                 $this->startTime--;
-                foreach($this->arena->lobbyp as $p){
+                foreach ($this->arena->lobbyp as $p) {
                     $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('starting')));
+                    if ($this->startTime === 1) {
+                        $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('starting_1_sec')));
+                    }
+                    if ($this->startTime === 0) {
+                        $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('')));
+                    }
                 }
+
                 if($this->startTime <= 0){
                     if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true){
                         $this->arena->startGame();
