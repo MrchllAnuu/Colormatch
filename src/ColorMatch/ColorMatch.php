@@ -268,11 +268,17 @@ class ColorMatch extends PluginBase implements Listener{
                                     if ($players === 0) {
                                         $sender->sendMessage($this->getPrefix().$this->getMsg('no_players'));
                                         break;
-                                    } else {
-                                        $this->ins[$args[1]]->startGame();
-                                        break;
+                                    } elseif ($players !== 0) {
+                                        if(!isset($args[1])) {
+                                            $sender->sendMessage($this->getPrefix() . $this->getMsg('start_help'));
+                                            break;
+                                        } else {
+                                            $this->ins[$args[1]]->startGame();
+                                            break;
+                                        }
                                     }
                                 }
+                                break;
                             case "stop":
                                 if(!$sender->hasPermission('cm.command.stop')){
                                     $sender->sendMessage($this->getPrefix().$this->getMsg('has_not_permission'));

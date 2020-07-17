@@ -311,6 +311,7 @@ class Arena implements Listener{
         }
     $this->broadcastResults();
     $this->resetFloor();
+    return;
 }
     public function abruptStop(){
         $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
