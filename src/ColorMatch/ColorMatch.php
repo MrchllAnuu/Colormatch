@@ -442,13 +442,13 @@ class ColorMatch extends PluginBase implements Listener{
             }
             if($this->setters[strtolower($p->getName())]['type'] == "setfirstcorner"){
                 $arena->setFirstCorner($b->x, $b->y, $b->z);
-                $p->sendMessage($this->getPrefix().$this->getMsg('first_corner'));
+                $p->sendMessage($this->getPrefix().$this->getMsg('first_corner_part'));
                 $this->setters[strtolower($p->getName())]['type'] = "setsecondcorner";
                 return;
             }
             if($this->setters[strtolower($p->getName())]['type'] == "setsecondcorner"){
                 $arena->setSecondCorner($b->x, $b->z);
-                $p->sendMessage($this->getPrefix().$this->getMsg('second_corner'));
+                $p->sendMessage($this->getPrefix().$this->getMsg('both_corners'));
                 unset($this->setters[strtolower($p->getName())]['type']);
                 return;
             }
