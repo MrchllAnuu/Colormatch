@@ -71,14 +71,18 @@ class ColorMatch extends PluginBase implements Listener{
         if(!is_file($this->getDataFolder()."languages/English.yml")){
                 $this->saveResource("languages/English.yml");
         }
-        if(is_file($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml")) {
+        if(!is_file($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml")){
+            $this->msg = new Config($this->getDataFolder()."languages/English.yml", Config::YAML);
+            $this->getServer()->getLogger()->info("[ColorMatch] Selected language: English");
+        }
+        else{
             $this->msg = new Config($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml", Config::YAML);
             $this->getServer()->getLogger()->info("[ColorMatch] Selected language: {$this->cfg->get('Language')}");
         }
     }
     
     public function checkArenas(){
-        $this->getLogger()->info("checking arena files...");
+        $this->getLogger()->info("Checking arena files...");
         foreach(glob($this->getDataFolder()."arenas/*.yml") as $file){
             $arena = new Config($file, Config::YAML);
             if(strtolower($arena->get("enabled")) === "false"){
@@ -91,7 +95,7 @@ class ColorMatch extends PluginBase implements Listener{
                 if($this->checkFile($arena) === true){
                     $fname = basename($file);
                     $this->setArenasData($arena, basename($file, ".yml"));
-                    $this->getLogger()->info("$fname - ".TextFormat::GREEN."checking sucessful");
+                    $this->getLogger()->info("$fname: ".TextFormat::GREEN."Working sucessfully");
                 }
                 else{
                     $this->arenas[basename($file, ".yml")] = $arena->getAll();
@@ -266,9 +270,14 @@ class ColorMatch extends PluginBase implements Listener{
                                 foreach ($this->ins as $arena) {
                                     $players = count(array_merge($arena->ingamep, $arena->lobbyp, $arena->spec));
                                     if ($players === 0) {
-                                        $sender->sendMessage($this->getPrefix().$this->getMsg('no_players'));
-                                        break;
-                                    } elseif ($players !== 0) {
+                                        if (isset($args[1])) {
+                                            $sender->sendMessage($this->getPrefix() . $this->getMsg('no_players'));
+                                            break;
+                                        } else {
+                                            $sender->sendMessage($this->getPrefix() . $this->getMsg('start_help'));
+                                            break;
+                                        }
+                                    }elseif ($players !== 0) {
                                         if(!isset($args[1])) {
                                             $sender->sendMessage($this->getPrefix() . $this->getMsg('start_help'));
                                             break;
