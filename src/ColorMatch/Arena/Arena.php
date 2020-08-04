@@ -248,16 +248,16 @@ class Arena implements Listener{
     
     public function getBlock(){
         if(strtolower($this->data['material']) == "wool"){
-            return 35;
+            return Block::WOOL;
         }
         elseif(strtolower($this->data['material']) == "clay"){
-            return 159;
+            return Block::STAINED_HARDENED_CLAY;
         }
         elseif(strtolower($this->data['material']) == "glass"){
-            return 241;
+            return Block::STAINED_GLASS;
         }
         elseif(strtolower($this->data['material']) == "concrete") {
-            return 236;
+            return Block::CONCRETE;
         }
         return false;
     }
@@ -475,7 +475,7 @@ class Arena implements Listener{
     
     public function onHit(EntityDamageEvent $e){
         if($e->getEntity() instanceof Player){
-            if($e->getCause() !== EntityDamageEvent::CAUSE_FALL || $e->getCause() !== EntityDamageEvent::CAUSE_LAVA && $this->getPlayerMode($e->getEntity()) !== false){
+            if($e->getCause() !== EntityDamageEvent::CAUSE_FALL || $e->getCause() !== EntityDamageEvent::CAUSE_LAVA){
                 $e->setCancelled(true);
             }
             if($e instanceof EntityDamageByEntityEvent){
