@@ -13,7 +13,6 @@ use pocketmine\event\player\PlayerDropItemEvent;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageEvent;
-use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\Player;
 use ColorMatch\ColorMatch;
 use pocketmine\math\Vector3;
@@ -49,6 +48,7 @@ class Arena implements Listener{
     
     public $setup = false;
     public $getFile;
+
     public function __construct($id, ColorMatch $plugin){
         $this->id = $id;
         $this->plugin = $plugin;
@@ -410,7 +410,7 @@ class Arena implements Listener{
     public function onChat(PlayerChatEvent $e){
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false){
-            $e->setCancelled(true);
+            $e->setCancelled();
             $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
             foreach($ingame as $pl){
                 $pl->sendMessage($p->getDisplayName()." > ".$e->getMessage());
@@ -472,32 +472,35 @@ class Arena implements Listener{
             $p->getInventory()->setItem(5, Item::get($this->getBlock(), $color, 1));
         }
     }
-    
+
     public function onHit(EntityDamageEvent $e){
-        if($e->getEntity() instanceof Player){
-            if($e->getCause() !== EntityDamageEvent::CAUSE_FALL || $e->getCause() !== EntityDamageEvent::CAUSE_LAVA){
-                $e->setCancelled(true);
+        if ($e->getEntity() instanceof Player) {
+
+            if ($this->getPlayerMode($e->getEntity()) === 1 and $e->getCause() === EntityDamageEvent::CAUSE_ENTITY_ATTACK || $e->getCause() === EntityDamageEvent::CAUSE_STARVATION || $e->getCause() === EntityDamageEvent::CAUSE_MAGIC || $e->getCause() === EntityDamageEvent::CAUSE_PROJECTILE || $e->getCause() === EntityDamageEvent::CAUSE_SUFFOCATION) {
+                $e->setCancelled();
             }
-            if($e instanceof EntityDamageByEntityEvent){
-                $p2 = $e->getEntity();
-                if($this->getPlayerMode($p2) !== false){
-                    $e->setCancelled(true);
-                }
+
+            if ($this->getPlayerMode($e->getEntity()) === 0){
+                $e->setCancelled();
+            }
+
+            if ($this->getPlayerMode($e->getEntity()) === 2) {
+                $e->setCancelled();
             }
         }
     }
-    
+
     public function onBlockBreak(BlockBreakEvent $e){
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false){
-            $e->setCancelled(true);
+            $e->setCancelled();
         }
     }
     
     public function onBlockPlace(BlockPlaceEvent $e){
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false){
-            $e->setCancelled(true);
+            $e->setCancelled();
         }
     }
     

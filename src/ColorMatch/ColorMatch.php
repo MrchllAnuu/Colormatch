@@ -13,9 +13,7 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\item\Item;
 use pocketmine\event\block\BlockBreakEvent;
-use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\level\Position;
-use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerKickEvent;
@@ -235,7 +233,7 @@ class ColorMatch extends PluginBase implements Listener{
                                         $this->ins[$args[1]]->joinToArena($sender);
                                         break;
                                     }
-
+                                    break;
 
                             case "leave":
                                 if(!$sender->hasPermission('cm.command.leave')){
@@ -254,7 +252,7 @@ class ColorMatch extends PluginBase implements Listener{
                                 break;
                             case "start":
                                 if(!$sender->hasPermission('cm.command.start')){
-                                    $sender->sendMessage($this->plugin->getMsg('has_not_permission'));
+                                    $sender->sendMessage($this->getMsg('has_not_permission'));
                                     break;
                                 }
                                 if(isset($args[2])){
@@ -399,7 +397,7 @@ class ColorMatch extends PluginBase implements Listener{
                     list($id, $dmg, $count) = explode(":", $i);
                     $item = Item::get($id, $dmg, $count);
                     $p->getInventory()->setItem($slot, $item);
-                    unset($this->plugin->inv[strtolower($p->getName())]);
+                    unset($this->inv[strtolower($p->getName())]);
                 }
             }
         }
@@ -554,9 +552,6 @@ class ColorMatch extends PluginBase implements Listener{
                     $p->sendMessage("§9--- §6§lColorMatch setup help§l 1/3§9 ---§r§f".$help1);
                     return;
                 }
-            }
-            switch(trim(strtolower($args[0]))){
-                
             }
             if(count(explode(' ', $msg)) >= 3 && strpos($msg, 'statusline') !== 0){
                 $p->sendMessage($this->getPrefix().$this->getMsg('invalid_arguments'));
