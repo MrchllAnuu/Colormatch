@@ -121,10 +121,6 @@ class ConfigManager{
         $this->arena->setNested('arena.send_color_tip', $data);
         $this->arena->save();
     }
-    public function setTime($data){
-        $this->arena->setNested('arena.time', $data);
-        $this->arena->save();
-    }
     public function setEnable($data){
         $this->arena->set('enabled', $data);
         $this->arena->save();

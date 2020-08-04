@@ -74,8 +74,6 @@ arena:
     color_wait_time: 5
     #Arena finish message message levels example: world,cm,colormatch,lobby
     finish_msg_levels: "game"
-    #enable time cycle - true / day / night / [ticks]
-    time: "day"
     #Item reward for win put ID:DAMAGE:COUNT ->  17:5:1,17:4:9,4:0:1  
     #0 if you don´t want reward
     item_reward: 0

@@ -112,7 +112,7 @@ class ColorMatch extends PluginBase implements Listener{
         if(!(is_numeric($arena->getNested("signs.join_sign_x")) && is_numeric($arena->getNested("signs.join_sign_y")) && is_numeric($arena->getNested("signs.join_sign_z")) && is_string($arena->getNested("signs.join_sign_world")) && is_string($arena->getNested("signs.status_line_1")) && is_string($arena->getNested("signs.status_line_2")) && is_string($arena->getNested("signs.status_line_3")) && is_string($arena->getNested("signs.status_line_4")) && is_numeric($arena->getNested("signs.return_sign_x")) && is_numeric($arena->getNested("signs.return_sign_y")) && is_numeric($arena->getNested("signs.return_sign_z")) && is_string($arena->getNested("arena.arena_world")) && is_numeric($arena->getNested("arena.join_position_x")) && is_numeric($arena->getNested("arena.join_position_y")) && is_numeric($arena->getNested("arena.join_position_z")) && is_numeric($arena->getNested("arena.lobby_position_x")) && is_numeric($arena->getNested("arena.lobby_position_y")) && is_numeric($arena->getNested("arena.lobby_position_z")) && is_numeric($arena->getNested("arena.first_corner_x")) && is_numeric($arena->getNested("arena.first_corner_z")) && is_numeric($arena->getNested("arena.second_corner_x")) && is_numeric($arena->getNested("arena.second_corner_z")) && is_numeric($arena->getNested("arena.spec_spawn_x")) && is_numeric($arena->getNested("arena.spec_spawn_y")) && is_numeric($arena->getNested("arena.spec_spawn_z")) && is_numeric($arena->getNested("arena.leave_position_x")) && is_numeric($arena->getNested("arena.leave_position_y")) && is_numeric($arena->getNested("arena.leave_position_z")) && is_string($arena->getNested("arena.leave_position_world")) && is_numeric($arena->getNested("arena.max_game_time")) && is_numeric($arena->getNested("arena.max_players")) && is_numeric($arena->getNested("arena.min_players")) && is_numeric($arena->getNested("arena.starting_time")) && is_numeric($arena->getNested("arena.color_wait_time")) && is_numeric($arena->getNested("arena.floor_y")) && is_string($arena->getNested("arena.finish_msg_levels")) && is_numeric($arena->getNested("arena.money_reward")))){
             return false;
         }
-        if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "clay" || strtolower($arena->get("material")) == "glass" || strtolower($arena->get("material")) == "concrete") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (strtolower($arena->getNested("arena.time")) == "true" || strtolower($arena->getNested("arena.time")) == "day" || strtolower($arena->getNested("arena.time")) == "night" || is_numeric(strtolower($arena->getNested("arena.time")))) && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))){
+        if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "clay" || strtolower($arena->get("material")) == "glass" || strtolower($arena->get("material")) == "concrete") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))){
             return false;
         }
         return true;
@@ -527,20 +527,19 @@ class ColorMatch extends PluginBase implements Listener{
                             . $this->getMsg('help_corners')
                             . $this->getMsg('help_spectatorspawn')
                             . $this->getMsg('help_leavepos');
-                    $help2 = $this->getMsg('help_time')
-                            . $this->getMsg('help_colortime')
+                    $help2 = $this->getMsg('help_colortime')
                             . $this->getMsg('help_type')
                             . $this->getMsg('help_material')
                             . $this->getMsg('help_ecoreward')
                             . $this->getMsg('help_allowstatus')
-                            . $this->getMsg('help_statusline');
+                            . $this->getMsg('help_statusline')
+                            . $this->getMsg('help_enable');
                     $help3 = $this->getMsg('help_allowspectator')
                             . $this->getMsg('help_signupdatetime')
                             . $this->getMsg('help_maxtime')
                             . $this->getMsg('help_starttime')
                             . $this->getMsg('help_maxplayers')
-                            . $this->getMsg('help_minplayers')
-                            . $this->getMsg('help_enable');
+                            . $this->getMsg('help_minplayers');
                     $helparray = [$help1, $help2, $help3];
                     if(isset($args[1])){
                         if(intval($args[1]) >= 1 && intval($args[1]) <= 3){
@@ -677,17 +676,6 @@ class ColorMatch extends PluginBase implements Listener{
                 }
                 $arena->setEcoReward(substr($msg, 10));
                 $p->sendMessage($this->getPrefix().$this->getMsg('ecoreward'));
-            }
-            elseif(strpos($msg, 'time') === 0){
-                if(substr($msg, 5) === 'true' || substr($msg, 5) === 'day' || substr($msg, 5) === 'night' || is_numeric(substr($msg, 5))){
-                    $arena->setTime(substr($msg, 5));
-                    $p->sendMessage($this->getPrefix().$this->getMsg('ecoreward'));
-                    return;
-                }
-                $p->sendMessage($this->getPrefix().$this->getMsg('time_help'));
-            }
-            else{
-                $p->sendMessage($this->getPrefix().$this->getMsg('invalid_arguments'));
             }
         }
     }

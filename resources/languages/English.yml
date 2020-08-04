@@ -91,7 +91,6 @@ maxplayers_help: "&6Use: &amaxplayers &b<amount>"
 minplayers_help: "&6Use: &aminplayers &b<amount>"
 starttime_help: "&6Use: &astarttime &b<seconds>"
 colortime_help: "&6Use: &acolortime &b<seconds>"
-time_help: "&6Use: &atime &b<true/day/night/TICKS>"
 enable_help: "&6Use: &aenable &b<true/false>"
 ecoreward_help: "&6Use: &aecoreward &b<dollars>"
 ##################################

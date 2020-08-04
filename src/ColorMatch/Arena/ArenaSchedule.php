@@ -4,8 +4,6 @@ namespace ColorMatch\Arena;
 
 use pocketmine\scheduler\Task;
 use pocketmine\tile\Sign;
-use pocketmine\Player;
-use ColorMatch\Arena\Arena;
 use pocketmine\math\Vector3;
 
 class ArenaSchedule extends Task{
@@ -14,14 +12,12 @@ class ArenaSchedule extends Task{
     private $time = 0;
     private $startTime;
     private $updateTime = 0;
-    private $ending = false;
-    
+
     private $forcestart = false;
     
     private $arena;
     
     #sign lines
-    private $level;
     private $line1;
     private $line2;
     private $line3;
@@ -67,7 +63,7 @@ class ArenaSchedule extends Task{
                         $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('starting_1_sec')));
                     }
                     if ($this->startTime === 0) {
-                        $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('')));
+                        $p->sendPopup(('§aCommence The Game!'));
                     }
                 }
 

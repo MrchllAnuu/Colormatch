@@ -54,10 +54,6 @@ class Arena implements Listener{
         $this->plugin = $plugin;
         $this->data = $plugin->arenas[$id];
         $this->checkWorlds();
-        if(strtolower($this->data['arena']['time'] !== "true")){
-            $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])->setTime(str_replace(['day', 'night'], [6000, 18000], $this->data['arena']['time']));
-            $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])->stopTime();
-        }
         $this->resetFloor();
         //$this->registerCmd("cm", ['description' => "ColorMatch command", 'permission' => "cm.command"]);
         //$game->registerCmd("cm", ['description' => "main command", 'usage' => "/cm", 'permission' => "cm.command"]);
@@ -204,7 +200,7 @@ class Arena implements Listener{
                         $this->giveEffect(9, $p);
                     }
                 }
-                $this->messageArenaPlayers($this->plugin->getMsg('start_game'));
+
                 $this->setColor(rand(0, 15));
                 $this->resetFloor();
             }
@@ -479,7 +475,7 @@ class Arena implements Listener{
     
     public function onHit(EntityDamageEvent $e){
         if($e->getEntity() instanceof Player){
-            if($e->getCause() !== 7 && $this->getPlayerMode($e->getEntity()) !== false){
+            if($e->getCause() !== EntityDamageEvent::CAUSE_FALL || $e->getCause() !== EntityDamageEvent::CAUSE_LAVA && $this->getPlayerMode($e->getEntity()) !== false){
                 $e->setCancelled(true);
             }
             if($e instanceof EntityDamageByEntityEvent){
