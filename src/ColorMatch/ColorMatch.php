@@ -37,9 +37,6 @@ class ColorMatch extends PluginBase implements Listener{
         $this->registerEconomy();
         $this->checkArenas();
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
-        if(!$this->getServer()->isLevelGenerated($this->cfg->getNested('lobby.world'))){
-            $this->getServer()->generateLevel($this->cfg->getNested('lobby.world'));
-        }
     }
     
     public function setArenasData(Config $arena, $name){
