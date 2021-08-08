@@ -392,7 +392,7 @@ class ColorMatch extends PluginBase implements Listener{
             if(isset($this->inv[strtolower($p->getName())])){
                 foreach($this->inv as $slot => $i){
                     list($id, $dmg, $count) = explode(":", $i);
-                    $item = Item::get($id, $dmg, $count);
+                    $item = Item::get((int)$id, (int)$dmg, (int)$count);
                     $p->getInventory()->setItem($slot, $item);
                     unset($this->inv[strtolower($p->getName())]);
                 }
@@ -513,7 +513,7 @@ class ColorMatch extends PluginBase implements Listener{
                     return;
             }
             $args = explode(' ', $msg);
-            if(count($args) >= 1 && count($args) <= 2){
+            if(count($args) >= 0 && count($args) <= 2){
                 if($args[0] === 'help'){
                     $help1 = $this->getMsg('help_joinsign')
                             . $this->getMsg('help_returnsign')

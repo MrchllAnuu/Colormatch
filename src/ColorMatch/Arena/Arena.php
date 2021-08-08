@@ -68,7 +68,7 @@ class Arena implements Listener{
         $b = $e->getBlock();
         $p = $e->getPlayer();
         if ($p->hasPermission("cm.sign") || $p->isOp()) {
-            if ($b->x == $this->data["signs"]["join_sign_x"] && $b->y == $this->data["signs"]["join_sign_y"] && $b->z == $this->data["signs"]["join_sign_z"] && $b->level == $this->plugin->getServer()->getLevelByName($this->data["signs"]["join_sign_world"])) {
+            if ($b->x == $this->data["signs"]["join_sign_x"] && $b->y == $this->data["signs"]["join_sign_y"] && $b->z == $this->data["signs"]["join_sign_z"] && $b->level === $this->plugin->getServer()->getLevelByName($this->data["signs"]["join_sign_world"])) {
                 if ($this->getPlayerMode($p) === 0 || $this->getPlayerMode($p) === 1 || $this->getPlayerMode($p) === 2) {
                     return;
                 }
@@ -81,7 +81,7 @@ class Arena implements Listener{
                     return;
                 }
             }
-                if ($b->x == $this->data["signs"]["return_sign_x"] && $b->y == $this->data["signs"]["return_sign_y"] && $b->z == $this->data["signs"]["return_sign_z"] && $b->level == $this->plugin->getServer()->getLevelByName($this->data["arena"]["arena_world"])) {
+                if ($b->x == $this->data["signs"]["return_sign_x"] && $b->y == $this->data["signs"]["return_sign_y"] && $b->z == $this->data["signs"]["return_sign_z"] && $b->level === $this->plugin->getServer()->getLevelByName($this->data["arena"]["arena_world"])) {
                     if ($this->getPlayerMode($p) === 0 || $this->getPlayerMode($p) === 2) {
                         $this->leaveArena($p);
                     }
@@ -112,7 +112,7 @@ class Arena implements Listener{
     
     public function joinToArena(Player $p)
     {
-        sleep(0.2);
+        sleep((int)0.2);
         if ($p->hasPermission("cm.access") || $p->isOp()) {
             if ($this->setup === true) {
                 $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('arena_in_setup'));
@@ -172,7 +172,7 @@ class Arena implements Listener{
         if(!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['leave_position_world'])){
             $this->plugin->getServer()->loadLevel($this->data['arena']['leave_position_world']);
         }
-        sleep(0.1);
+        sleep((int)0.1);
         $p->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('leave'));
         $this->loadInv($p);
         $p->removeAllEffects();
@@ -205,6 +205,7 @@ class Arena implements Listener{
                 $this->resetFloor();
             }
         }
+        return true;
     }
 
     public function giveEffect($e, Player $p){
@@ -524,7 +525,7 @@ class Arena implements Listener{
         if(isset($this->data['arena']['item_reward']) && $this->data['arena']['item_reward'] !== null && intval($this->data['arena']['item_reward']) !== 0){
             foreach(explode(',', str_replace(' ', '', $this->data['arena']['item_reward'])) as $item){
                 $exp = explode(':', $item);
-                if(isset($exp[0]) && isset($exp[0]) && isset($exp[0])) {
+                if(isset($exp[0])) {
                     list($id, $damage, $count) = $exp;
                     if (Item::get($id, $damage, $count) instanceof Item) {
                         $p->getInventory()->addItem($id, $damage, $count);
