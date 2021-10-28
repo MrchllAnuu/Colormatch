@@ -132,5 +132,5 @@ help_ecoreward: "\n- &2ecoreward &b<dollars> &l&5»&r&f Sets the money reward fo
 ######################
 #other setup messages#
 ######################
-break_block: "&aNow break a block"
+break_block: "&aBreak a block to set the first corner."
 break_sign: "&aNow break a sign"

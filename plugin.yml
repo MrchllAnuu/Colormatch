@@ -2,7 +2,7 @@ name: ColorMatch
 version: 1.3.0
 api: 3.0.0
 main: ColorMatch\ColorMatch
-author: HummerSvem, BlazingOne, Original By CreeperFace
+author: CreeperFace
 description: The game in where you find and get to the right color in a certain time limit, last one standing wins.
 
 commands:
@@ -41,6 +41,12 @@ permissions:
                         default: true
                     cm.command.set:
                         description: "Allow player to edit arenas from the game"
+                        default: op
+                    cm.command.create:
+                        description: "Create an arena."
+                        default: op
+                    cm.command.delete:
+                        description: "Delete an arena."
                         default: op
             cm.sign:
                 description: "Join using signs"

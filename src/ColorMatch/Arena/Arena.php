@@ -30,7 +30,7 @@ use pocketmine\utils\Config;
 
 class Arena implements Listener{
 
-    private $id;
+    public $id;
     public $plugin;
     public $data;
     
@@ -148,28 +148,28 @@ class Arena implements Listener{
         $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('has_not_permission'));
     }
     
-    public function leaveArena(Player $p){
-        if($this->getPlayerMode($p) == 0){
+    public function leaveArena(Player $p) {
+        if($this->getPlayerMode($p) == 0) {
             unset($this->lobbyp[strtolower($p->getName())]);
             $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
         }
-        if($this->getPlayerMode($p) == 1){
+        if($this->getPlayerMode($p) == 1) {
             $this->checkWinners($p);
             unset($this->ingamep[strtolower($p->getName())]);
             $this->messageArenaPlayers(str_replace("%1", $p->getName(), $this->plugin->getMsg('leave_others')));
             $this->checkAlive();
         }
-        if($this->getPlayerMode($p) == 2){
+        if($this->getPlayerMode($p) == 2) {
             unset($this->spec[strtolower($p->getName())]);
             $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
         }
-        if(isset($this->players[strtolower($p->getName())]['arena'])){
+        if(isset($this->players[strtolower($p->getName())]['arena'])) {
             unset($this->players[strtolower($p->getName())]['arena']);
         }
-        if(!$this->plugin->getServer()->isLevelGenerated($this->data['arena']['leave_position_world'])){
+        if(!$this->plugin->getServer()->isLevelGenerated($this->data['arena']['leave_position_world'])) {
             $this->plugin->getServer()->generateLevel($this->data['arena']['leave_position_world']);
         }
-        if(!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['leave_position_world'])){
+        if(!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['leave_position_world'])) {
             $this->plugin->getServer()->loadLevel($this->data['arena']['leave_position_world']);
         }
         sleep((int)0.1);
@@ -310,7 +310,7 @@ class Arena implements Listener{
     $this->resetFloor();
     return;
 }
-    public function abruptStop(){
+    public function abruptStop() {
         $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
         foreach($ingame as $p) {
             $p->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('abrupt_stop'));
@@ -537,7 +537,7 @@ class Arena implements Listener{
         if($this->data['arena']['money_reward'] !== null && $this->plugin->economy !== null){
             $money = $this->data['arena']['money_reward'];
             $ec = $this->plugin->economy;
-            switch($ec->getName()){
+            switch($p->getName()){
                 case "EconomyAPI":
                     $ec->addMoney($p->getName(), $money);
                     break;
