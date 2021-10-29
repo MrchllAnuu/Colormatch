@@ -13,21 +13,21 @@ class PlayerWinArenaEvent extends PluginEvent{
     
     public static $handlerList = null;
     
-    public function __construct(ColorMatch $plugin, Player $player, Arena $arena){
+    public function __construct(ColorMatch $plugin, Player $player, Arena $arena) {
         parent::__construct($plugin);
         $this->player = $player;
         $this->arena = $arena;
     }
     
-    public function getPlayer(){
+    public function getPlayer() {
         return $this->player;
     }
     
-    public function getArena(){
+    public function getArena() {
         return $this->arena;
     }
     
-    public function getArenaName(){
+    public function getArenaName() {
         return $this->arena->id;
     }
 }

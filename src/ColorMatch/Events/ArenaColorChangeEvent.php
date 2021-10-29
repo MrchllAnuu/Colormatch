@@ -11,10 +11,10 @@ class ArenaColorChangeEvent extends PluginEvent implements Cancellable{
     protected $arena;
     protected $oldColor;
     protected $newColor;
-    
+
     public static $handlerList = null;
-    
-    public function __construct(ColorMatch $plugin, Arena $arena, $oldColor, $newColor){
+
+    public function __construct(ColorMatch $plugin, Arena $arena, $oldColor, $newColor) {
         parent::__construct($plugin);
         $this->arena = $arena;
         $this->newColor = $newColor;
@@ -22,23 +22,23 @@ class ArenaColorChangeEvent extends PluginEvent implements Cancellable{
     }
     
     
-    public function getArena(){
+    public function getArena() {
         return $this->arena;
     }
     
-    public function getArenaName(){
+    public function getArenaName() {
         return $this->arena->id;
     }
     
-    public function getNewColor(){
+    public function getNewColor() {
         return $this->newColor;
     }
     
-    public function getOldColor(){
+    public function getOldColor() {
         return $this->oldColor;
     }
     //color is 0-15
-    public function setNewColor($color){
-        $this->newcolor = $color;
+    public function setNewColor($color) {
+        $this->newColor = $color;
     }
 }
