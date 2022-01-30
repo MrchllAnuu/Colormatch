@@ -72,12 +72,13 @@ class ColorMatch extends PluginBase implements Listener{
         }
         else{
             $this->msg = new Config($this->getDataFolder()."languages/{$this->cfg->get('Language')}.yml", Config::YAML);
+            /* Enable when new languages are added.
             $this->getServer()->getLogger()->info("[ColorMatch] Selected language: {$this->cfg->get('Language')}");
+            */
         }
     }
     
     public function checkArenas() {
-        $this->getLogger()->info("Checking arena files...");
         foreach(glob($this->getDataFolder()."arenas/*.yml") as $file) {
             $arena = new Config($file, Config::YAML);
             if(strtolower($arena->get("enabled")) === "false") {
@@ -90,14 +91,13 @@ class ColorMatch extends PluginBase implements Listener{
                 if($this->checkFile($arena) === true) {
                     $fname = basename($file);
                     $this->setArenasData($arena, basename($file, ".yml"));
-                    $this->getLogger()->info("$fname: ".TextFormat::GREEN."Working sucessfully");
                 }
                 else{
                     $this->arenas[basename($file, ".yml")] = $arena->getAll();
                     $this->arenas[basename($file, ".yml")]['enabled'] = 'false';
                     //$this->setArenasData($arena, basename($file, ".yml"), false);
                     $fname = basename($file, ".yml");
-                    $this->getLogger()->error("Arena \"$fname\" is not set properly");
+                    $this->getLogger()->error("Arena \"$fname\" is not set properly.");
                 }
             }
         }
@@ -513,7 +513,7 @@ class ColorMatch extends PluginBase implements Listener{
                     return;
             }
             $args = explode(' ', $msg);
-            if((count($args) >= 1) && (count($args) <= 2)) {
+            if((count($args) > 0) && (count($args) <= 2)) {
                 if($args[0] === 'help') {
                     $help1 = $this->getMsg('help_joinsign')
                             . $this->getMsg('help_returnsign')
@@ -737,6 +737,5 @@ class ColorMatch extends PluginBase implements Listener{
             }
         }
         $this->economy = null;
-        $this->getServer()->getLogger()->info("[ColorMatch] No economy plugin found.");
     }
 }
