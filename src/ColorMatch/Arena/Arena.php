@@ -23,7 +23,7 @@ use pocketmine\math\Vector3;
 use pocketmine\world\Position;
 use pocketmine\entity\effect\EffectInstance;
 use pocketmine\item\Item;
-use pocketmine\world\world;
+use pocketmine\world\World;
 use ColorMatch\Events\PlayerJoinArenaEvent;
 use ColorMatch\Events\PlayerLoseArenaEvent;
 use ColorMatch\Events\PlayerWinArenaEvent;
