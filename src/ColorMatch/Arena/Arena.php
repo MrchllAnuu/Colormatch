@@ -2,6 +2,9 @@
 
 namespace ColorMatch\Arena;
 
+use pocketmine\block\BlockFactory;
+use pocketmine\block\VanillaBlocks;
+use pocketmine\entity\effect\VanillaEffects;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
@@ -13,15 +16,14 @@ use pocketmine\event\player\PlayerDropItemEvent;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageEvent;
-use pocketmine\Player;
+use pocketmine\item\ItemFactory;
+use pocketmine\player\Player;
 use ColorMatch\ColorMatch;
 use pocketmine\math\Vector3;
-use pocketmine\level\Position;
-use pocketmine\block\Block;
-use pocketmine\entity\Effect;
-use pocketmine\entity\EffectInstance;
+use pocketmine\world\Position;
+use pocketmine\entity\effect\EffectInstance;
 use pocketmine\item\Item;
-use pocketmine\level\Level;
+use pocketmine\world\world;
 use ColorMatch\Events\PlayerJoinArenaEvent;
 use ColorMatch\Events\PlayerLoseArenaEvent;
 use ColorMatch\Events\PlayerWinArenaEvent;
@@ -33,19 +35,19 @@ class Arena implements Listener{
     public $id;
     public $plugin;
     public $data;
-    
+
     public $lobbyp = [];
     public $ingamep = [];
     public $spec = [];
-    
+
     public $game = 0;
-    
+
     public $currentColor = 0;
-    
+
     public $winners = [];
-    
+
     public $deads = [];
-    
+
     public $setup = false;
     public $getFile;
 	private $players;
@@ -59,17 +61,17 @@ class Arena implements Listener{
         //$this->registerCmd("cm", ['description' => "ColorMatch command", 'permission' => "cm.command"]);
         //$game->registerCmd("cm", ['description' => "main command", 'usage' => "/cm", 'permission' => "cm.command"]);
     }
-    
+
     public function enableScheduler() {
         $this->plugin->getScheduler()->scheduleRepeatingTask(new ArenaSchedule($this), 20);
     }
-    
+
     public function onBlockTouch(PlayerInteractEvent $e)
     {
-        $b = $e->getBlock();
+        $b = $e->getBlock()->getPosition();
         $p = $e->getPlayer();
-        if ($p->hasPermission("cm.sign") || $p->isOp()) {
-            if ($b->x == $this->data["signs"]["join_sign_x"] && $b->y == $this->data["signs"]["join_sign_y"] && $b->z == $this->data["signs"]["join_sign_z"] && $b->level === $this->plugin->getServer()->getLevelByName($this->data["signs"]["join_sign_world"])) {
+        if ($p->hasPermission("cm.sign") || $this->plugin->getServer()->isOp($p->getName())) {
+            if ($b->x == $this->data["signs"]["join_sign_x"] && $b->y == $this->data["signs"]["join_sign_y"] && $b->z == $this->data["signs"]["join_sign_z"] && $b->world === $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data["signs"]["join_sign_world"])) {
                 if ($this->getPlayerMode($p) === 0 || $this->getPlayerMode($p) === 1 || $this->getPlayerMode($p) === 2) {
                     return;
                 }
@@ -82,7 +84,7 @@ class Arena implements Listener{
                     return;
                 }
             }
-                if ($b->x == $this->data["signs"]["return_sign_x"] && $b->y == $this->data["signs"]["return_sign_y"] && $b->z == $this->data["signs"]["return_sign_z"] && $b->level === $this->plugin->getServer()->getLevelByName($this->data["arena"]["arena_world"])) {
+                if ($b->x == $this->data["signs"]["return_sign_x"] && $b->y == $this->data["signs"]["return_sign_y"] && $b->z == $this->data["signs"]["return_sign_z"] && $b->world === $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data["arena"]["arena_world"])) {
                     if ($this->getPlayerMode($p) === 0 || $this->getPlayerMode($p) === 2) {
                         $this->leaveArena($p);
                     }
@@ -90,7 +92,7 @@ class Arena implements Listener{
             return;
             }
         }
-    
+
     public function getPlayerMode(Player $p) {
         if(isset($this->lobbyp[strtolower($p->getName())])) {
             return 0;
@@ -103,18 +105,18 @@ class Arena implements Listener{
         }
         return false;
     }
-    
+
     public function messageArenaPlayers($msg) {
         $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
         foreach($ingame as $p) {
             $p->sendMessage($this->plugin->getPrefix().$msg);
         }
     }
-    
+
     public function joinToArena(Player $p)
     {
         sleep((int)0.2);
-        if ($p->hasPermission("cm.access") || $p->isOp()) {
+        if ($p->hasPermission("cm.access") || $this->plugin->getServer()->isOp($p->getName())) {
             if ($this->setup === true) {
                 $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('arena_in_setup'));
                 return;
@@ -127,18 +129,19 @@ class Arena implements Listener{
                 $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('ingame'));
                 return;
             }
-            if (!$this->plugin->getServer()->isLevelGenerated($this->data['arena']['arena_world'])) {
-                $this->plugin->getServer()->generateLevel($this->data['arena']['arena_world']);
+            if (!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['arena']['arena_world'])) {
+                $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['arena']['arena_world'], null);
             }
-            if (!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['arena_world'])) {
-                $this->plugin->getServer()->loadLevel($this->data['arena']['arena_world']);
-            }
-            $this->plugin->getServer()->getPluginManager()->callEvent($event = new PlayerJoinArenaEvent($this->plugin, $p, $this));
+            if (!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['arena_world'])) {
+				$this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['arena_world']);
+			}
+            $event = new PlayerJoinArenaEvent($this->plugin, $p, $this);
+            $event->call();
             if ($event->isCancelled()) {
                 return;
             }
                 $this->saveInv($p);
-                $p->teleport(new Position($this->data['arena']['lobby_position_x'], $this->data['arena']['lobby_position_y'], $this->data['arena']['lobby_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])));
+                $p->teleport(new Position($this->data['arena']['lobby_position_x'], $this->data['arena']['lobby_position_y'], $this->data['arena']['lobby_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
                 $this->lobbyp[strtolower($p->getName())] = $p;
                 $vars = ['%1'];
                 $replace = [$p->getName()];
@@ -148,11 +151,11 @@ class Arena implements Listener{
         }
         $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('has_not_permission'));
     }
-    
+
     public function leaveArena(Player $p) {
         if($this->getPlayerMode($p) == 0) {
             unset($this->lobbyp[strtolower($p->getName())]);
-            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
+            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         if($this->getPlayerMode($p) == 1) {
             $this->checkWinners($p);
@@ -162,21 +165,21 @@ class Arena implements Listener{
         }
         if($this->getPlayerMode($p) == 2) {
             unset($this->spec[strtolower($p->getName())]);
-            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
+            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         if(isset($this->players[strtolower($p->getName())]['arena'])) {
             unset($this->players[strtolower($p->getName())]['arena']);
         }
-        if(!$this->plugin->getServer()->isLevelGenerated($this->data['arena']['leave_position_world'])) {
-            $this->plugin->getServer()->generateLevel($this->data['arena']['leave_position_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['arena']['leave_position_world'])) {
+            $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['arena']['leave_position_world'], null);
         }
-        if(!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['leave_position_world'])) {
-            $this->plugin->getServer()->loadLevel($this->data['arena']['leave_position_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['leave_position_world'])) {
+            $this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['leave_position_world']);
         }
         sleep((int)0.1);
         $p->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('leave'));
         $this->loadInv($p);
-        $p->removeAllEffects();
+        $p->getEffects()->clear();
     }
 
     /**
@@ -193,13 +196,8 @@ class Arena implements Listener{
                 foreach ($this->lobbyp as $p) {
                     unset($this->lobbyp[strtolower($p->getName())]);
                     $this->ingamep[strtolower($p->getName())] = $p;
-                    $p->teleport(new Position($this->data['arena']['join_position_x'], $this->data['arena']['join_position_y'], $this->data['arena']['join_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])));
-                    if ($this->data['type'] == "furious") {
-                        $this->giveEffect(1, $p);
-                    }
-                    if ($this->data['type'] == "stoned") {
-                        $this->giveEffect(9, $p);
-                    }
+                    $p->teleport(new Position($this->data['arena']['join_position_x'], $this->data['arena']['join_position_y'], $this->data['arena']['join_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
+					$this->giveEffect($p);
                 }
 
                 $this->setColor(rand(0, 15));
@@ -209,21 +207,23 @@ class Arena implements Listener{
         return true;
     }
 
-    public function giveEffect($e, Player $p) {
-        $effect = Effect::getEffect($e);
-        if($e === 1) {
-            $p->addEffect(new EffectInstance($effect, 2147483647, 9, false));
-        }
-        else{
-            $p->addEffect(new EffectInstance($effect, 2147483647, 1, false));
-        }
+	//TODO add more types.
+    public function giveEffect(Player $p) {
+    	switch($this->data['type']) {
+    		case "furious":
+    			$p->getEffects()->add(new EffectInstance(VanillaEffects::SlOWNESS(), 2147483647, 3, false));
+    			break;
+			case "stoned":
+				$p->getEffects()->add(new EffectInstance(VanillaEffects::NAUSEA(), 2147483647, 9, false));
+				break;
+    	}
     }
-    
+
     public function resetFloor() {
         $colorcount = 0;
         $blocks = 0;
         $y = $this->data['arena']['floor_y'];
-        $level =  $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world']);
+        $level =  $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world']);
         for($x = min($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x <= max($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x += 3) {
             for($z = min($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z <= max($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z += 3) {
                 $blocks++;
@@ -231,8 +231,8 @@ class Arena implements Listener{
                 if($colorcount === 0 && $blocks === 15 || $colorcount <= 1 && $blocks === 40) {
                     $color = $this->currentColor;
                 }
-                $block = Block::get($this->getBlock(), $color);
-                if($block->getDamage() === $this->currentColor) {
+                $block = BlockFactory::getInstance()->get($this->getBlock(), $color);
+                if($block->getMeta() === $this->currentColor) {
                     $colorcount++;
                 }
                 $level->setBlock(new Position($x, $y, $z, $level), $block, false, true);
@@ -247,48 +247,48 @@ class Arena implements Listener{
             }
         }
     }
-    
+
     public function getBlock() {
         if(strtolower($this->data['material']) == "wool") {
-            return Block::WOOL;
+            return VanillaBlocks::WOOL()->getId();
         }
         elseif(strtolower($this->data['material']) == "clay") {
-            return Block::STAINED_HARDENED_CLAY;
+            return VanillaBlocks::STAINED_CLAY()->getId();
         }
         elseif(strtolower($this->data['material']) == "glass") {
-            return Block::STAINED_GLASS;
+            return VanillaBlocks::STAINED_GLASS()->getId();
         }
         elseif(strtolower($this->data['material']) == "concrete") {
-            return Block::CONCRETE;
+            return VanillaBlocks::CONCRETE()->getId();
         }
         return false;
     }
-    
+
     public function removeAllExpectOne() {
         $y = $this->data['arena']['floor_y'];
-        $level =  $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world']);
+        $level =  $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world']);
         $color = $this->currentColor;
         for($x = min($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x <= max($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x++) {
             for($z = min($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z <= max($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z++) {
-                if($level->getBlock(new Vector3($x, $y, $z))->getDamage() !== $color && $level->getBlock(new Vector3($x, $y, $z))->getId() === $this->getBlock()) {
-                    $level->setBlock(new Vector3($x, $y, $z), Block::get(0, 0), false, true);
+                if($level->getBlock(new Vector3($x, $y, $z))->getMeta() !== $color && $level->getBlock(new Vector3($x, $y, $z))->getId() === $this->getBlock()) {
+                    $level->setBlock(new Vector3($x, $y, $z), BlockFactory::getInstance()->get(0, 0), false, true);
                 }
             }
         }
     }
-    
+
     public function onQuit(PlayerQuitEvent $e) {
         if($this->getPlayerMode($e->getPlayer()) !== false) {
             $this->leaveArena($e->getPlayer());
         }
     }
-    
+
     public function onKick(PlayerKickEvent $e) {
         if($this->getPlayerMode($e->getPlayer()) !== false) {
             $this->leaveArena($e->getPlayer());
         }
     }
-    
+
     public function checkAlive() {
         if(count($this->ingamep) <= 1) {
             if(count($this->ingamep) === 1) {
@@ -299,7 +299,7 @@ class Arena implements Listener{
             $this->stopGame();
         }
     }
-    
+
     public function stopGame() {
     $this->unsetAllPlayers();
     $this->game = 0;
@@ -320,73 +320,73 @@ class Arena implements Listener{
         $this->game = 0;
         $this->resetFloor();
     }
-    
+
     public function unsetAllPlayers() {
         foreach($this->ingamep as $p) {
-            $p->removeAllEffects();
+			$p->getEffects()->clear();
             $this->loadInv($p);
             unset($this->ingamep[strtolower($p->getName())]);
-            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
+            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         foreach($this->lobbyp as $p) {
-            $p->removeAllEffects();
+			$p->getEffects()->clear();
             $this->loadInv($p);
             unset($this->lobbyp[strtolower($p->getName())]);
-            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
+            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         foreach($this->spec as $p) {
-            $p->removeAllEffects();
+			$p->getEffects()->clear();
             $this->loadInv($p);
             unset($this->spec[strtolower($p->getName())]);
-            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
+            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
     }
-    
+
     public function saveInv(Player $p) {
         $items = [];
         foreach($p->getInventory()->getContents() as $slot=>&$item) {
-            $items[$slot] = implode(":", [$item->getId(), $item->getDamage(), $item->getCount()]);
+            $items[$slot] = implode(":", [$item->getId(), $item->getMeta(), $item->getCount()]);
         }
         $this->plugin->inv[strtolower($p->getName())] = $items;
         $p->getInventory()->clearAll();
     }
-    
+
     public function loadInv(Player $p) {
-        if(!$p->isOnline()) {
+        if($p->isClosed()) {
             return;
         }
         $p->getInventory()->clearAll();
         foreach($this->plugin->inv[strtolower($p->getName())] as $slot => $i) {
             list($id, $dmg, $count) = explode(":", $i);
-            $item = Item::get($id, $dmg, $count);
+            $item = ItemFactory::getInstance()->get($id, $dmg, $count);
             $p->getInventory()->setItem($slot, $item);
             unset($this->plugin->inv[strtolower($p->getName())]);
         }
     }
-    
+
     public function onRespawn(PlayerRespawnEvent $e) {
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) === 0) {
-            $e->setRespawnPosition(new Position($this->data['arena']['lobby_position_x'], $this->data['arena']['lobby_position_y'], $this->data['arena']['lobby_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])));
+            $e->setRespawnPosition(new Position($this->data['arena']['lobby_position_x'], $this->data['arena']['lobby_position_y'], $this->data['arena']['lobby_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
             return;
         }
         if($this->getPlayerMode($p) === 1) {
             if($this->data['arena']['spectator_mode'] == 'true') {
-                $e->setRespawnPosition(new Position($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_y'], $this->data['arena']['spec_spawn_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])));
+                $e->setRespawnPosition(new Position($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_y'], $this->data['arena']['spec_spawn_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
                 unset($this->ingamep[strtolower($p->getName())]);
                 $this->spec[strtolower($p->getName())] = $p;
                 return;
             }
             unset($this->ingamep[strtolower($p->getName())]);
-            $e->setRespawnPosition(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['leave_position_world'])));
+            $e->setRespawnPosition(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
             return;
         }
         if($this->getPlayerMode($p) === 2) {
             //$p->sendChunk($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_z']);
-            $e->setRespawnPosition(new Position($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_y'], $this->data['arena']['spec_spawn_z'], $this->plugin->getServer()->getLevelByName($this->data['arena']['arena_world'])));
+            $e->setRespawnPosition(new Position($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_y'], $this->data['arena']['spec_spawn_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
         }
     }
-    
+
     public function onDeath(PlayerDeathEvent $e) {
         $p = $e->getEntity();
         if($p instanceof Player) {
@@ -394,7 +394,8 @@ class Arena implements Listener{
                 $e->setDeathMessage("");
             }
             if($this->getPlayerMode($p) === 1) {
-                $this->plugin->getServer()->getPluginManager()->callEvent($event = new PlayerLoseArenaEvent($this->plugin, $p, $this));
+                $event = new PlayerLoseArenaEvent($this->plugin, $p, $this);
+                $event->call();
                 $e->setDeathMessage("");
                 $e->setDrops([]);
                 $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
@@ -408,29 +409,29 @@ class Arena implements Listener{
             }
         }
     }
-    
+
     public function onChat(PlayerChatEvent $e) {
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false) {
-            $e->setCancelled();
+            $e->cancel();
             $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
             foreach($ingame as $pl) {
-                $pl->sendMessage($p->getDisplayName()." > ".$e->getMessage());
+                $pl->sendMessage($p->getName()." > ".$e->getMessage());
             }
         }
     }
-    
+
     public function onDropItem(PlayerDropItemEvent $e) {
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false) {
-            $e->setCancelled();
+            $e->cancel();
         }
     }
-    
+
     public function getMaxPlayers() {
         return $this->data['arena']['max_players'];
     }
-    
+
     public function getMinPlayers() {
         return $this->data['arena']['min_players'];
     }
@@ -439,11 +440,12 @@ class Arena implements Listener{
             $this->winners[count($this->ingamep)] = $p->getName();
         }
     }
-    
+
     public function broadcastResults() {
-        if($this->plugin->getServer()->getPlayer($this->winners[1]) instanceof Player) {
-            $this->giveReward($this->plugin->getServer()->getPlayer($this->winners[1]));
-            $this->plugin->getServer()->getPluginManager()->callEvent($event = new PlayerWinArenaEvent($this->plugin, $this->plugin->getServer()->getPlayer($this->winners[1]), $this));
+        if($this->plugin->getServer()->getPlayerExact($this->winners[1]) instanceof Player) {
+            $this->giveReward($this->plugin->getServer()->getPlayerExact($this->winners[1]));
+            $event = new PlayerWinArenaEvent($this->plugin, $this->plugin->getServer()->getPlayerExact($this->winners[1]), $this);
+            $event->call();
         }
         if(!isset($this->winners[1])) $this->winners[1] = "---";
         if(!isset($this->winners[2])) $this->winners[2] = "---";
@@ -453,25 +455,26 @@ class Arena implements Listener{
         $msg = str_replace($vars, $replace, $this->plugin->getMsg('end_game'));
         $levels = explode(",", $this->data['arena']['finish_msg_levels']);
         foreach($levels as $level) {
-            $lvl = $this->plugin->getServer()->getLevelByName($level);
-            if($lvl instanceof Level) {
+            $lvl = $this->plugin->getServer()->getWorldManager()->getWorldByName($level);
+            if($lvl instanceof World) {
                 foreach($lvl->getPlayers() as $p) {
                     $p->sendMessage($msg);
                 }
             }
         }
     }
-    
+
     public function setColor($color) {
-        $this->plugin->getServer()->getPluginManager()->callEvent($event = new ArenaColorChangeEvent($this->plugin, $this, $this->currentColor, $color));
+        ($event = new ArenaColorChangeEvent($this->plugin, $this, $this->currentColor, $color));
+		$event->call();
         if($event->isCancelled()) {
             return;
         }
         $this->currentColor = $event->getNewColor();
         foreach($this->ingamep as $p) {
-            $p->getInventory()->setItem(3, Item::get($this->getBlock(), $color, 1));
-            $p->getInventory()->setItem(4, Item::get($this->getBlock(), $color, 1));
-            $p->getInventory()->setItem(5, Item::get($this->getBlock(), $color, 1));
+            $p->getInventory()->setItem(3, ItemFactory::getInstance()->get($this->getBlock(), $color, 1));
+            $p->getInventory()->setItem(4, ItemFactory::getInstance()->get($this->getBlock(), $color, 1));
+            $p->getInventory()->setItem(5, ItemFactory::getInstance()->get($this->getBlock(), $color, 1));
         }
     }
 
@@ -479,15 +482,15 @@ class Arena implements Listener{
         if ($e->getEntity() instanceof Player) {
 
             if ($this->getPlayerMode($e->getEntity()) === 1 and $e->getCause() === EntityDamageEvent::CAUSE_ENTITY_ATTACK || $e->getCause() === EntityDamageEvent::CAUSE_STARVATION || $e->getCause() === EntityDamageEvent::CAUSE_MAGIC || $e->getCause() === EntityDamageEvent::CAUSE_PROJECTILE || $e->getCause() === EntityDamageEvent::CAUSE_SUFFOCATION) {
-                $e->setCancelled();
+                $e->cancel();
             }
 
             if ($this->getPlayerMode($e->getEntity()) === 0) {
-                $e->setCancelled();
+                $e->cancel();
             }
 
             if ($this->getPlayerMode($e->getEntity()) === 2) {
-                $e->setCancelled();
+                $e->cancel();
             }
         }
     }
@@ -495,17 +498,17 @@ class Arena implements Listener{
     public function onBlockBreak(BlockBreakEvent $e) {
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false) {
-            $e->setCancelled();
+            $e->cancel();
         }
     }
-    
+
     public function onBlockPlace(BlockPlaceEvent $e) {
         $p = $e->getPlayer();
         if($this->getPlayerMode($p) !== false) {
-            $e->setCancelled();
+            $e->cancel();
         }
     }
-    
+
     public function kickPlayer($p, $reason = "")
     {
         $players = array_merge($this->ingamep, $this->lobbyp, $this->spec);
@@ -516,19 +519,19 @@ class Arena implements Listener{
         }
         $this->leaveArena($players[strtolower($p)]);
     }
-    
+
     public function getStatus() {
         if($this->game === 0) return "lobby";
         if($this->game === 1) return "ingame";
     }
-    
+
     public function giveReward(Player $p) {
         if(isset($this->data['arena']['item_reward']) && $this->data['arena']['item_reward'] !== null && intval($this->data['arena']['item_reward']) !== 0) {
             foreach(explode(',', str_replace(' ', '', $this->data['arena']['item_reward'])) as $item) {
                 $exp = explode(':', $item);
                 if(isset($exp[0])) {
                     list($id, $damage, $count) = $exp;
-                    if (Item::get($id, $damage, $count) instanceof Item) {
+                    if (ItemFactory::getInstance()->get($id, $damage, $count) instanceof Item) {
                         $p->getInventory()->addItem($id, $damage, $count);
                     }
                 }
@@ -537,8 +540,8 @@ class Arena implements Listener{
         if(isset($this->data['arena']['money_reward'])) {
         if($this->data['arena']['money_reward'] !== null && $this->plugin->economy !== null) {
             $money = $this->data['arena']['money_reward'];
-            $ec = $this->plugin->economy;
-            switch($p->getName()) {
+			$ec = $this->plugin->economy;
+            switch($this->plugin->pluginName) {
                 case "EconomyAPI":
                     $ec->addMoney($p->getName(), $money);
                     break;
@@ -550,25 +553,25 @@ class Arena implements Listener{
         }
         }
     }
-    
+
     public function checkWorlds() {
-        if(!$this->plugin->getServer()->isLevelGenerated($this->data['arena']['arena_world'])) {
-            $this->plugin->getServer()->generateLevel($this->data['arena']['arena_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['arena']['arena_world'])) {
+            $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['arena']['arena_world'], null);
         }
-        if(!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['arena_world'])) {
-            $this->plugin->getServer()->loadLevel($this->data['arena']['arena_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['arena_world'])) {
+            $this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['arena_world']);
         }
-        if(!$this->plugin->getServer()->isLevelGenerated($this->data['signs']['join_sign_world'])) {
-            $this->plugin->getServer()->generateLevel($this->data['signs']['join_sign_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['signs']['join_sign_world'])) {
+            $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['signs']['join_sign_world'], null);
         }
-        if(!$this->plugin->getServer()->isLevelLoaded($this->data['signs']['join_sign_world'])) {
-            $this->plugin->getServer()->loadLevel($this->data['signs']['join_sign_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['signs']['join_sign_world'])) {
+            $this->plugin->getServer()->getWorldManager()->loadWorld($this->data['signs']['join_sign_world']);
         }
-        if(!$this->plugin->getServer()->isLevelGenerated($this->data['arena']['leave_position_world'])) {
-            $this->plugin->getServer()->generateLevel($this->data['arena']['leave_position_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['arena']['leave_position_world'])) {
+            $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['arena']['leave_position_world'], null);
         }
-        if(!$this->plugin->getServer()->isLevelLoaded($this->data['arena']['leave_position_world'])) {
-            $this->plugin->getServer()->loadLevel($this->data['arena']['leave_position_world']);
+        if(!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['leave_position_world'])) {
+            $this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['leave_position_world']);
         }
     }
 }

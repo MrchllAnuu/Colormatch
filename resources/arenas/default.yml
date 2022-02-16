@@ -74,8 +74,7 @@ arena:
     color_wait_time: 5
     #Arena finish message message levels example: world,cm,colormatch,lobby
     finish_msg_levels: "game"
-    #Item reward for win put ID:DAMAGE:COUNT ->  17:5:1,17:4:9,4:0:1  
-    #0 if you don´t want reward
+    #Get an item reward [Item ID]
     item_reward: 0
-    #coin rewars put number of money
+    #Coin reward in dollars.
     money_reward: 0

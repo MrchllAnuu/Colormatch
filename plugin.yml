@@ -1,6 +1,6 @@
 name: ColorMatch
 version: 1.3.0
-api: 3.0.0
+api: 4.0.0
 main: ColorMatch\ColorMatch
 author: CreeperFace
 description: The game in where you find and get to the right color in a certain time limit, last one standing wins.
@@ -8,49 +8,44 @@ description: The game in where you find and get to the right color in a certain 
 commands:
     cm:
         description: "The main ColorMatch command"
-
+        permission: cm
 permissions:
     cm:
         description: "Main ColorMatch permission"
+        default: true
+    cm.command:
+        description: "Main command permission"
+        default: true
+    cm.command.help:
+        description: "ColorMatch help"
+        default: true
+    cm.command.join:
+        description: "Join an arena"
+        default: true
+    cm.command.leave:
+        description: "Leave your current arena "
+        default: true
+    cm.command.start:
+        description: "Force start a game"
         default: op
-        children:
-            cm.command:
-                description: "Main command permission"
-                default: op
-                children:
-                    cm.command.help:
-                        description: "ColorMatch help"
-                        default: true
-                    cm.command.join:
-                        description: "Join an arena"
-                        default: true
-                    cm.command.leave:
-                        description: "Leave your current arena "
-                        default: true
-                    cm.command.start:
-                        description: "Force start a game"
-                        default: op
-                    cm.command.stop:
-                        description: "Force stop a game"
-                        default: op
-                    cm.command.kick:
-                        description: "Kick player from the arena"
-                        default: op
-                    cm.command.lobby:
-                        description: "Send player to lobby"
-                        default: true
-                    cm.command.set:
-                        description: "Allow player to edit arenas from the game"
-                        default: op
-                    cm.command.create:
-                        description: "Create an arena."
-                        default: op
-                    cm.command.delete:
-                        description: "Delete an arena."
-                        default: op
-            cm.sign:
-                description: "Join using signs"
-                default: true
-            cm.access:
-                description: "Let the player actually play the matches."
-                default: true
+    cm.command.stop:
+        description: "Force stop a game"
+        default: op
+    cm.command.kick:
+        description: "Kick player from the arena"
+        default: op
+    cm.command.set:
+        description: "Allow player to edit arenas from the game"
+        default: op
+    cm.command.create:
+        description: "Create an arena."
+        default: op
+    cm.command.delete:
+        description: "Delete an arena."
+        default: op
+    cm.sign:
+        description: "Join using signs"
+        default: true
+    cm.access:
+        description: "Let the player actually play the matches."
+        default: true
