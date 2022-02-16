@@ -2,7 +2,7 @@
 
 namespace ColorMatch\Arena;
 
-use Pocketmine\scheduler\Task;
+use pocketmine\scheduler\Task;
 use pocketmine\block\tile\Sign;
 use pocketmine\block\utils\SignText;
 

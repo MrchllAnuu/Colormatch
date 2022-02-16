@@ -353,7 +353,7 @@ class ColorMatch extends PluginBase implements Listener{
 
 	public function onBlockTouch(PlayerInteractEvent $e) {
 		$p = $e->getPlayer();
-		$b = $e->getBlock();
+		$b = $e->getBlock()->getPosition();
 		if(isset($this->selectors[strtolower($p->getName())])) {
 			$p->sendMessage(TextFormat::BLUE."X: ".TextFormat::GREEN.$b->x.TextFormat::BLUE." Y: ".TextFormat::GREEN.$b->y.TextFormat::BLUE." Z: ".TextFormat::GREEN.$b->z);
 		}
@@ -388,7 +388,7 @@ class ColorMatch extends PluginBase implements Listener{
 			$arena = new ConfigManager($this->setters[strtolower($p->getName())]['arena'], $this);
 			if($this->setters[strtolower($p->getName())]['type'] == "setjoinsign") {
 				if ($e->getBlock() instanceof BaseSign) {
-					$arena->setJoinSign($b->x, $b->y, $b->z, $b->world->getDisplayName());
+					$arena->setJoinSign($b->x, $b->y, $b->z, $b->getWorld()->getDisplayName());
 					$p->sendMessage($this->getPrefix().$this->getMsg('joinsign'));
 					unset($this->setters[strtolower($p->getName())]['type']);
 				} else {
@@ -408,7 +408,7 @@ class ColorMatch extends PluginBase implements Listener{
 			}
 			if($this->setters[strtolower($p->getName())]['type'] == "setjoinpos") {
 				$arena->setJoinPos($b->x, $b->y, $b->z);
-				$arena->setArenaWorld($b->world->getDisplayName());
+				$arena->setArenaWorld($b->getWorld()->getDisplayName());
 				$p->sendMessage($this->getPrefix().$this->getMsg('startpos'));
 				unset($this->setters[strtolower($p->getName())]['type']);
 				return;
@@ -438,7 +438,7 @@ class ColorMatch extends PluginBase implements Listener{
 				return;
 			}
 			if($this->setters[strtolower($p->getName())]['type'] == "setleavepos") {
-				$arena->setLeavePos($b->x, $b->y, $b->z, $b->world->getDisplayName());
+				$arena->setLeavePos($b->x, $b->y, $b->z, $b->getWorld()->getDisplayName());
 				$p->sendMessage($this->getPrefix().$this->getMsg('leavepos'));
 				unset($this->setters[strtolower($p->getName())]['type']);
 				return;

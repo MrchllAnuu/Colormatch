@@ -211,7 +211,7 @@ class Arena implements Listener{
     public function giveEffect(Player $p) {
     	switch($this->data['type']) {
     		case "furious":
-    			$p->getEffects()->add(new EffectInstance(VanillaEffects::SlOWNESS(), 2147483647, 3, false));
+    			$p->getEffects()->add(new EffectInstance(VanillaEffects::SLOWNESS(), 2147483647, 3, false));
     			break;
 			case "stoned":
 				$p->getEffects()->add(new EffectInstance(VanillaEffects::NAUSEA(), 2147483647, 9, false));
