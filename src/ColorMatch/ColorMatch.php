@@ -421,7 +421,7 @@ class ColorMatch extends PluginBase implements Listener{
 			}
 			if($this->setters[strtolower($p->getName())]['type'] == "setfirstcorner") {
 				$arena->setFirstCorner($b->x, $b->y, $b->z);
-				$p->sendMessage($this->getPrefix().$this->getMsg('first_corner_part'));
+				$p->sendMessage($this->getPrefix().$this->getMsg('first_corner_second_part'));
 				$this->setters[strtolower($p->getName())]['type'] = "setsecondcorner";
 				return;
 			}
@@ -471,7 +471,7 @@ class ColorMatch extends PluginBase implements Listener{
 					return;
 				case 'corners':
 					$this->setters[strtolower($p->getName())]['type'] = 'setfirstcorner';
-					$p->sendMessage($this->getPrefix().$this->getMsg('break_block'));
+					$p->sendMessage($this->getPrefix().$this->getMsg('first_corner'));
 					return;
 				case 'spectatorspawn':
 					$this->setters[strtolower($p->getName())]['type'] = 'setspecspawn';
@@ -643,6 +643,8 @@ class ColorMatch extends PluginBase implements Listener{
 				}
 				$arena->setEcoReward(substr($msg, 10));
 				$p->sendMessage($this->getPrefix().$this->getMsg('ecoreward'));
+			} else {
+				$p->sendMessage($this->getPrefix().$this->getMsg('invalid_arguments'));
 			}
 		}
 	}

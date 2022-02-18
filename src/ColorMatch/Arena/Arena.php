@@ -235,15 +235,16 @@ class Arena implements Listener{
                 if($block->getMeta() === $this->currentColor) {
                     $colorcount++;
                 }
-                $level->setBlock(new Position($x, $y, $z, $level), $block, false, true);
-                $level->setBlock(new Position($x, $y, $z+1, $level), $block, false, true);
-                $level->setBlock(new Position($x, $y, $z+2, $level), $block, false, true);
-                $level->setBlock(new Position($x+1, $y, $z, $level), $block, false, true);
-                $level->setBlock(new Position($x+1, $y, $z+1, $level), $block, false, true);
-                $level->setBlock(new Position($x+1, $y, $z+2, $level), $block, false, true);
-                $level->setBlock(new Position($x+2, $y, $z, $level), $block, false, true);
-                $level->setBlock(new Position($x+2, $y, $z+1, $level), $block, false, true);
-                $level->setBlock(new Position($x+2, $y, $z+2, $level), $block, false, true);
+				//Switching this plugin to schematics ASAP
+				$level->setBlock(new Position($x, $y, $z, $level), $block, true);
+				$level->setBlock(new Position($x + 1, $y, $z, $level), $block, true);
+				$level->setBlock(new Position($x + 2, $y, $z, $level), $block, true);
+				$level->setBlock(new Position($x, $y, $z+1, $level), $block, true);
+				$level->setBlock(new Position($x, $y, $z+2, $level), $block, true);
+				$level->setBlock(new Position($x + 1, $y, $z + 1, $level), $block, true);
+				$level->setBlock(new Position($x + 1, $y, $z + 2, $level), $block, true);
+				$level->setBlock(new Position($x + 2, $y, $z + 1, $level), $block, true);
+				$level->setBlock(new Position($x + 2, $y, $z + 2, $level), $block, true);
             }
         }
     }
