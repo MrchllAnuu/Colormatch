@@ -13,7 +13,7 @@ class ConfigManager{
 	public function __construct($id, ColorMatch $plugin) {
 		$this->id = $id;
 		$this->plugin = $plugin;
-		$this->arena = new Config($this->plugin->getDataFolder()."arenas/$id.yml", Config::YAML);
+		$this->arena = new Config($this->plugin->getDataFolder()."arenas/$this->id.yml", Config::YAML);
 	}
 
 	public function setType($type) {

@@ -488,7 +488,7 @@ class ColorMatch extends PluginBase implements Listener{
 					return;
 			}
 			$args = explode(' ', $msg);
-			if((count($args) > 0) && (count($args) <= 2)) {
+			if((count($args) <= 2)) {
 				if($args[0] === 'help') {
 					$help1 = $this->getMsg('help_joinsign')
 						. $this->getMsg('help_returnsign')
@@ -702,7 +702,7 @@ class ColorMatch extends PluginBase implements Listener{
 	}
 
 	public function registerEconomy() {
-		$economy = ["EconomyAPI", "PocketMoney"];
+		$economy = ["EconomyAPI", "BedrockEconomy"];
 		foreach($economy as $plugin) {
 			$ins = $this->getServer()->getPluginManager()->getPlugin($plugin);
 			if($ins instanceof Plugin && $ins->isEnabled()) {

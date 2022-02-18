@@ -545,8 +545,8 @@ class Arena implements Listener{
                 case "EconomyAPI":
                     $ec->addMoney($p->getName(), $money);
                     break;
-                case "PocketMoney":
-                    $ec->setMoney($p->getName(), $ec->getMoney($p->getName()));
+                case "BedrockEconomy":
+                    $ec->getAPI()->addToPlayerBalance($p->getName(), $money);
                     break;
             }
             $p->sendMessage($this->plugin->getPrefix().str_replace('%1', $money, $this->plugin->getMsg('get_money')));
