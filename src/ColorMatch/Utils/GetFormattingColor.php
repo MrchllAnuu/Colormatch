@@ -2,7 +2,7 @@
 
 namespace Colormatch\Utils;
 
-class GetFormattingColor {
+class GetFormattingColor{
 	
 	public function get($currentColor) {
 		switch($currentColor) {
