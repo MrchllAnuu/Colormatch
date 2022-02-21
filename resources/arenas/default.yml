@@ -1,10 +1,10 @@
 ## example how to create new arena
 ---
-#type of game classic/furious/stoned
+#Type of game that'll be played. Types: classic/furious/stoned
 type: "classic"
-#material wool or clay
+#This sets the floor material to either wool, terracotta, glass, or concrete.
 material: "wool"
-#if enabled is false arena won´t load.
+#Arena won´t load if set to false.
 enabled: "false"
 #signs
 signs:
@@ -12,7 +12,7 @@ signs:
     join_sign_y: 78
     join_sign_z: -487
     join_sign_world: "world"
-    #enable status sign
+    #Sets the joinsign to a custom status.
     enable_status: "true"
     #status lines
     #variables:
@@ -25,9 +25,9 @@ signs:
     status_line_2: "&a%alive/%max"
     status_line_3: "%status"
     status_line_4: "&6%type"
-    #sign update every X seconds
+    #sign update every X seconds.
     sign_update_time: 2
-    #returns player to main level/lobby
+    #returns player to the return position.
     #world is same like arena_world
     return_sign_x: 566
     return_sign_y: 57
@@ -39,11 +39,11 @@ arena:
     join_position_x: 320
     join_position_y: 40
     join_position_z: 32
-    #lobby is pregame lobby
+    #Pregame position.
     lobby_position_x: 344
     lobby_position_y: 102
     lobby_position_z: -982
-    #corners of game floor place lava few blocks under floor
+    #corners of game floor. Have a method for killing the player underneath.
     first_corner_x: 300
     first_corner_z: 20
     #

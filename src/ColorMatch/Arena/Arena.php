@@ -252,7 +252,7 @@ class Arena implements Listener{
         if(strtolower($this->data['material']) == "wool") {
             return VanillaBlocks::WOOL()->getId();
         }
-        elseif(strtolower($this->data['material']) == "clay") {
+        elseif(strtolower($this->data['material']) == "terracotta") {
             return VanillaBlocks::STAINED_CLAY()->getId();
         }
         elseif(strtolower($this->data['material']) == "glass") {
