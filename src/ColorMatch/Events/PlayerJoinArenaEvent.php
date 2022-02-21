@@ -2,12 +2,12 @@
 
 namespace ColorMatch\Events;
 
-use pocketmine\event\plugin\PluginEvent;
-use pocketmine\player\Player;
-use ColorMatch\ColorMatch;
 use ColorMatch\Arena\Arena;
+use ColorMatch\ColorMatch;
 use pocketmine\event\Cancellable;
 use pocketmine\event\CancellableTrait;
+use pocketmine\event\plugin\PluginEvent;
+use pocketmine\player\Player;
 
 class PlayerJoinArenaEvent extends PluginEvent implements Cancellable {
     protected $player;

@@ -2,22 +2,22 @@
 
 namespace ColorMatch;
 
+use ColorMatch\Arena\Arena;
 use pocketmine\block\BaseSign;
-use pocketmine\item\ItemFactory;
-use pocketmine\plugin\PluginBase;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
-use pocketmine\utils\Config;
-use pocketmine\utils\TextFormat;
-use pocketmine\player\Player;
-use ColorMatch\Arena\Arena;
+use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
-use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerKickEvent;
+use pocketmine\item\ItemFactory;
+use pocketmine\player\Player;
 use pocketmine\plugin\Plugin;
+use pocketmine\plugin\PluginBase;
+use pocketmine\utils\Config;
+use pocketmine\utils\TextFormat;
 
 class ColorMatch extends PluginBase implements Listener{
 

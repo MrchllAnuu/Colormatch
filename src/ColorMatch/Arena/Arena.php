@@ -2,34 +2,36 @@
 
 namespace ColorMatch\Arena;
 
-use pocketmine\block\BlockFactory;
-use pocketmine\block\VanillaBlocks;
-use pocketmine\entity\effect\VanillaEffects;
-use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerInteractEvent;
-use pocketmine\event\player\PlayerRespawnEvent;
-use pocketmine\event\player\PlayerDeathEvent;
-use pocketmine\event\player\PlayerQuitEvent;
-use pocketmine\event\player\PlayerKickEvent;
-use pocketmine\event\player\PlayerChatEvent;
-use pocketmine\event\player\PlayerDropItemEvent;
-use pocketmine\event\block\BlockBreakEvent;
-use pocketmine\event\block\BlockPlaceEvent;
-use pocketmine\event\entity\EntityDamageEvent;
-use pocketmine\item\ItemFactory;
-use pocketmine\player\GameMode;
-use pocketmine\player\Player;
 use ColorMatch\ColorMatch;
-use pocketmine\math\Vector3;
-use pocketmine\world\Position;
-use pocketmine\entity\effect\EffectInstance;
-use pocketmine\item\Item;
-use pocketmine\world\World;
 use ColorMatch\Events\PlayerJoinArenaEvent;
 use ColorMatch\Events\PlayerLoseArenaEvent;
 use ColorMatch\Events\PlayerWinArenaEvent;
 use ColorMatch\Events\ArenaColorChangeEvent;
+use ColorMatch\Utils\GetFormattingColor;
+use pocketmine\block\BlockFactory;
+use pocketmine\block\VanillaBlocks;
+use pocketmine\entity\effect\EffectInstance;
+use pocketmine\entity\effect\VanillaEffects;
+use pocketmine\event\Listener;
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\player\PlayerInteractEvent;
+use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\event\player\PlayerKickEvent;
+use pocketmine\event\player\PlayerChatEvent;
+use pocketmine\event\player\PlayerDropItemEvent;
+use pocketmine\item\Item;
+use pocketmine\item\ItemFactory;
+use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\PlaySoundPacket;
+use pocketmine\player\GameMode;
+use pocketmine\player\Player;
 use pocketmine\utils\Config;
+use pocketmine\world\sound\NoteInstrument;
+use pocketmine\world\sound\NoteSound;
+use pocketmine\world\Position;
+use pocketmine\world\World;
 
 class Arena implements Listener{
 
@@ -52,7 +54,6 @@ class Arena implements Listener{
     public $setup = false;
     public $getFile;
 	private $players;
-	private $respawn;
 
 	public function __construct($id, ColorMatch $plugin) {
         $this->id = $id;
@@ -117,7 +118,6 @@ class Arena implements Listener{
 
     public function joinToArena(Player $p)
     {
-        sleep((int)0.2);
         if ($p->hasPermission("cm.access") || $this->plugin->getServer()->isOp($p->getName())) {
             if ($this->setup === true) {
                 $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('arena_in_setup'));
@@ -155,12 +155,11 @@ class Arena implements Listener{
     }
 
     public function leaveArena(Player $p) {
-        if($this->getPlayerMode($p) == 0) {
+		if($this->getPlayerMode($p) == 0) {
             unset($this->lobbyp[strtolower($p->getName())]);
             $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         if($this->getPlayerMode($p) == 1) {
-            $this->checkWinners($p);
             unset($this->ingamep[strtolower($p->getName())]);
             $this->messageArenaPlayers(str_replace("%1", $p->getName(), $this->plugin->getMsg('leave_others')));
 			$p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
@@ -168,6 +167,7 @@ class Arena implements Listener{
         }
         if($this->getPlayerMode($p) == 2) {
             unset($this->spec[strtolower($p->getName())]);
+            $p->setGamemode(Gamemode::SURVIVAL());
             $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         if(isset($this->players[strtolower($p->getName())]['arena'])) {
@@ -179,7 +179,6 @@ class Arena implements Listener{
         if(!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['leave_position_world'])) {
             $this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['leave_position_world']);
         }
-        sleep((int)0.1);
         $p->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('leave'));
         $this->loadInv($p);
         $p->getEffects()->clear();
@@ -200,6 +199,7 @@ class Arena implements Listener{
 				}
 
 				$this->setColor(rand(0, 15));
+				$this->gamePopup('wait');
                 $this->resetFloor();
             }
         }
@@ -277,6 +277,55 @@ class Arena implements Listener{
         }
     }
 
+    public function playEndingSound($soundStage) {
+		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+		foreach ($ingame as $p) {
+			switch ($soundStage) {
+				case 1:
+					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::DOUBLE_BASS(),24), [$p]);
+					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::PIANO(),12), [$p]);
+					break;
+				case 2:
+					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::DOUBLE_BASS(),20), [$p]);
+					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::PIANO(),8), [$p]);
+					break;
+				case 3:
+					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::DOUBLE_BASS(),15), [$p]);
+					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::PIANO(),3), [$p]);
+					break;
+				case 4:
+					$sound = PlaySoundPacket::create("mob.bat.takeoff", $p->getPosition()->x, $p->getPosition()->y, $p->getPosition()->z, 1, 0.8);
+					$p->getServer()->broadcastPackets($ingame, [$sound]);
+					break;
+			}
+		}
+	}
+
+	public function gamePopup($stage) {
+		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+		$color = new GetFormattingColor();
+		$color = $color->get($this->currentColor);
+		foreach ($ingame as $p) {
+			switch ($stage) {
+				case 3:
+					$p->sendPopup($color . '⬜⬛⬛⬛⬛⬛⬜');
+					break;
+				case 2:
+					$p->sendPopup($color . '⬜⬜⬛⬛⬛⬜⬜');
+					break;
+				case 1:
+					$p->sendPopup($color . '⬜⬜⬜⬛⬜⬜⬜');
+					break;
+				case 'wait':
+					$p->sendPopup($color . '⬛⬛⬛⬛⬛⬛⬛');
+					break;
+				case 'freeze':
+					$p->sendPopup('§f§lFREEZE');
+					break;
+			}
+		}
+	}
+
     public function onQuit(PlayerQuitEvent $e) {
         if($this->getPlayerMode($e->getPlayer()) !== false) {
             $this->leaveArena($e->getPlayer());
@@ -301,15 +350,15 @@ class Arena implements Listener{
     }
 
     public function stopGame() {
-    $this->unsetAllPlayers();
-    $this->game = 0;
-    $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
-        foreach($ingame as $p) {
-            $this->checkWinners($p);
-        }
-    $this->broadcastResults();
-    $this->resetFloor();
-    return;
+		$this->unsetAllPlayers();
+		$this->game = 0;
+		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+		foreach($ingame as $p) {
+			$this->checkWinners($p);
+		}
+		$this->broadcastResults();
+    	$this->resetFloor();
+		return;
 }
     public function abruptStop() {
         $ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
@@ -322,26 +371,17 @@ class Arena implements Listener{
     }
 
     public function unsetAllPlayers() {
-        foreach($this->ingamep as $p) {
+		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+        foreach($ingame as $p) {
 			$p->getEffects()->clear();
-            $this->loadInv($p);
+			$this->loadInv($p);
             unset($this->ingamep[strtolower($p->getName())]);
-            $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
-        }
-        foreach($this->lobbyp as $p) {
-			$p->getEffects()->clear();
-            $this->loadInv($p);
-            unset($this->lobbyp[strtolower($p->getName())]);
+			unset($this->lobbyp[strtolower($p->getName())]);
             $p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
         }
         foreach($this->spec as $p) {
-			$p->getEffects()->clear();
-			if ($p->isAlive() === true) {
-				$this->loadInv($p);
-				$p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
-			}
 			$p->setGamemode(Gamemode::SURVIVAL());
-            unset($this->spec[strtolower($p->getName())]);
+			unset($this->spec[strtolower($p->getName())]);
         }
     }
     public function saveInv(Player $p) {
@@ -366,54 +406,26 @@ class Arena implements Listener{
         }
     }
 
-	public function onRespawn(PlayerRespawnEvent $e) {
+	public function deathHandler(Player $p) {
+		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+		$event = new PlayerLoseArenaEvent($this->plugin, $p, $this, $ingame);
+		$event->call();
+		$p->getInventory()->clearAll();
+		$this->checkWinners($p);
+		unset($this->ingamep[strtolower($p->getName())]);
 
-		$p = $e->getPlayer();
-		$ingame = count(array_merge($this->lobbyp, $this->ingamep, $this->spec));
-		if($this->getPlayerMode($p) === 0) {
-			$e->setRespawnPosition(new Position($this->data['arena']['lobby_position_x'], $this->data['arena']['lobby_position_y'], $this->data['arena']['lobby_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
-			return;
-		}
-		if ($this->respawn === 1 && $ingame <= 2) {
-			$e->setRespawnPosition(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
+		if ($this->data['arena']['spectator_mode'] == 'true') {
+			$this->spec[strtolower($p->getName())] = $p;
+			$p->setGamemode(Gamemode::SPECTATOR());
+			$p->teleport(new Position($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_y'], $this->data['arena']['spec_spawn_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
+		} else {
+			$p->teleport(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
 			$this->loadInv($p);
 		}
-		if($this->getPlayerMode($p) === 2) {
-			if($this->data['arena']['spectator_mode'] == 'true' && $ingame > 0) {
-				$p->setGamemode(Gamemode::SPECTATOR());
-				$e->setRespawnPosition(new Position($this->data['arena']['spec_spawn_x'], $this->data['arena']['spec_spawn_y'], $this->data['arena']['spec_spawn_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
-				return;
-			} else {
-				unset($this->spec[strtolower($p->getName())]);
-				$e->setRespawnPosition(new Position($this->data['arena']['leave_position_x'], $this->data['arena']['leave_position_y'], $this->data['arena']['leave_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['leave_position_world'])));
-				$this->loadInv($p);
-				return;
-			}
+		foreach($ingame as $pl) {
+			$pl->sendMessage($this->plugin->getPrefix().str_replace(['%2', '%1'], [count($this->ingamep), $p->getName()], $this->plugin->getMsg('death')));
 		}
-	}
-
-	public function onDeath(PlayerDeathEvent $e) {
-		$p = $e->getEntity();
-		if($p instanceof Player) {
-			$this->respawn = $this->getPlayerMode($p);
-			if($this->getPlayerMode($p) === 0 || $this->getPlayerMode($p) === 2) {
-				$e->setDeathMessage("");
-			}
-			if($this->getPlayerMode($p) === 1) {
-				$event = new PlayerLoseArenaEvent($this->plugin, $p, $this);
-				$event->call();
-				$e->setDeathMessage("");
-				$e->setDrops([]);
-				$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
-				$this->checkWinners($p);
-				unset($this->ingamep[strtolower($p->getName())]);
-				$this->spec[strtolower($p->getName())] = $p;
-				foreach($ingame as $pl) {
-					$pl->sendMessage($this->plugin->getPrefix().str_replace(['%2', '%1'], [count($this->ingamep), $p->getName()], $this->plugin->getMsg('death')));
-				}
-				$this->checkAlive();
-			}
-		}
+		$this->checkAlive();
 	}
 
     public function onChat(PlayerChatEvent $e) {
@@ -498,6 +510,11 @@ class Arena implements Listener{
             if ($this->getPlayerMode($e->getEntity()) === 2) {
                 $e->cancel();
             }
+
+            if ($this->getPlayerMode($e->getEntity()) === 1 && ($e->getFinalDamage() >= $e->getEntity()->getHealth())) {
+            	$e->cancel();
+            	$this->deathHandler($e->getEntity());
+			}
         }
     }
 

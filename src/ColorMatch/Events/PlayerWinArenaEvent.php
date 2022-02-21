@@ -2,10 +2,10 @@
 
 namespace ColorMatch\Events;
 
+use ColorMatch\Arena\Arena;
+use ColorMatch\ColorMatch;
 use pocketmine\event\plugin\PluginEvent;
 use pocketmine\player\Player;
-use ColorMatch\ColorMatch;
-use ColorMatch\Arena\Arena;
 
 class PlayerWinArenaEvent extends PluginEvent {
     protected $player;

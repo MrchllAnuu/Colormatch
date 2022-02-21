@@ -2,9 +2,9 @@
 
 namespace ColorMatch\Arena;
 
-use pocketmine\scheduler\Task;
 use pocketmine\block\tile\Sign;
 use pocketmine\block\utils\SignText;
+use pocketmine\scheduler\Task;
 
 class ArenaSchedule extends Task{
 
@@ -88,15 +88,29 @@ class ArenaSchedule extends Task{
             $this->mainTime--;
             if($this->mainTime === 0) {
                 $this->arena->stopGame();
-            }
-            else{
+            } else {
                 if($this->time == $this->arena->data['arena']['color_wait_time']) {
+					$this->arena->gamePopup("freeze");
+					$this->arena->playEndingSound(4);
                     $this->arena->removeAllExpectOne();
                 }
+                if ($this->time == $this->arena->data['arena']['color_wait_time'] - 3) {
+                	$this->arena->playEndingSound(1);
+                	$this->arena->gamePopup(3);
+				}
+				if ($this->time == $this->arena->data['arena']['color_wait_time'] - 2) {
+					$this->arena->playEndingSound(2);
+					$this->arena->gamePopup(2);
+				}
+				if ($this->time == $this->arena->data['arena']['color_wait_time'] - 1) {
+					$this->arena->playEndingSound(3);
+					$this->arena->gamePopup(1);
+				}
                 if($this->time == $this->arena->data['arena']['color_wait_time'] + 3) {
                     $this->time = 0;
                     $this->arena->setColor(rand(0, 15));
                     $this->arena->resetFloor();
+					$this->arena->gamePopup("wait");
                 }
                 if(count($this->arena->ingamep) <= 1) {
                     $this->arena->checkAlive();
