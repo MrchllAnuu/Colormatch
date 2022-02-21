@@ -1,8 +1,8 @@
 <?php
 
-namespace Colormatch\Utils;
+namespace ColorMatch\Utils;
 
-class GetFormattingColor{
+class GetFormattingColor {
 	
 	public function get($currentColor) {
 		switch($currentColor) {
