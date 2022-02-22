@@ -9,9 +9,9 @@ use pocketmine\scheduler\Task;
 class ArenaSchedule extends Task{
 
     private $mainTime;
-    private $time = 0;
+    private int $time = 0;
     private $startTime;
-    private $updateTime = 0;
+    private int $updateTime = 0;
 
     private $forcestart = false;
 
@@ -25,8 +25,6 @@ class ArenaSchedule extends Task{
 
     public function __construct(Arena $arena) {
         $this->arena = $arena;
-        $this->startTime = $this->arena->data['arena']['starting_time'];
-        $this->mainTime = $this->arena->data['arena']['max_game_time'];
         $this->line1 = str_replace("&", "§", $this->arena->data['signs']['status_line_1']);
         $this->line2 = str_replace("&", "§", $this->arena->data['signs']['status_line_2']);
         $this->line3 = str_replace("&", "§", $this->arena->data['signs']['status_line_3']);
@@ -56,6 +54,9 @@ class ArenaSchedule extends Task{
         }
 
         if($this->arena->game === 0) {
+			$this->startTime = $this->arena->data['arena']['starting_time'];
+			$this->mainTime = $this->arena->data['arena']['max_game_time'];
+			$this->time = 0;
             if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true) {
                 $this->startTime--;
                 foreach ($this->arena->lobbyp as $p) {

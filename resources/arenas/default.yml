@@ -63,17 +63,15 @@ arena:
     leave_position_z: 450
     leave_position_world: "world"
     #time (seconds)
+    starting_time: 30
+    #[seconds]
+    color_wait_time: 5
+    #Arena finish
     max_game_time: 300
     #
     max_players: 10
     #
     min_players: 4
-    #[seconds]
-    starting_time: 30
-    #[seconds]
-    color_wait_time: 5
-    #Arena finish message message levels example: world,cm,colormatch,lobby
-    finish_msg_levels: "game"
     #Get an item reward [Item ID]
     item_reward: 0
     #Coin reward in dollars.

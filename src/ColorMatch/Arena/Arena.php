@@ -5,7 +5,7 @@ namespace ColorMatch\Arena;
 use ColorMatch\ColorMatch;
 use ColorMatch\Events\PlayerJoinArenaEvent;
 use ColorMatch\Events\PlayerLoseArenaEvent;
-use ColorMatch\Events\PlayerWinArenaEvent;
+//use ColorMatch\Events\PlayerWinArenaEvent;
 use ColorMatch\Events\ArenaColorChangeEvent;
 use ColorMatch\Utils\GetFormattingColor;
 use pocketmine\block\BlockFactory;
@@ -31,7 +31,6 @@ use pocketmine\utils\Config;
 use pocketmine\world\sound\NoteInstrument;
 use pocketmine\world\sound\NoteSound;
 use pocketmine\world\Position;
-use pocketmine\world\World;
 
 class Arena implements Listener{
 
@@ -47,7 +46,7 @@ class Arena implements Listener{
 
     public $currentColor = 0;
 
-    public $winners = [];
+    public array $winners = [];
 
     public $deads = [];
 
@@ -197,7 +196,6 @@ class Arena implements Listener{
 					$p->teleport(new Position($this->data['arena']['join_position_x'], $this->data['arena']['join_position_y'], $this->data['arena']['join_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
 					$this->giveEffect($p);
 				}
-
 				$this->setColor(rand(0, 15));
 				$this->gamePopup('wait');
                 $this->resetFloor();
@@ -216,7 +214,8 @@ class Arena implements Listener{
 				$p->getEffects()->add(new EffectInstance(VanillaEffects::NAUSEA(), 2147483647, 9, false));
 				break;
     	}
-    }
+    	$p->getEffects()->add(new EffectInstance(VanillaEffects::SATURATION(), 2147483647, 10, false));
+	}
 
    public function resetFloor() {
         $colorcount = 0;
@@ -340,23 +339,17 @@ class Arena implements Listener{
 
     public function checkAlive() {
         if(count($this->ingamep) <= 1) {
-            if(count($this->ingamep) === 1) {
-                foreach($this->ingamep as $p) {
-                    $this->winners[1] = $p->getName();
-                }
-            }
             $this->stopGame();
         }
     }
 
     public function stopGame() {
-		$this->unsetAllPlayers();
-		$this->game = 0;
-		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
-		foreach($ingame as $p) {
+		foreach($this->ingamep as $p) {
 			$this->checkWinners($p);
 		}
+		$this->game = 0;
 		$this->broadcastResults();
+		$this->unsetAllPlayers();
     	$this->resetFloor();
 		return;
 }
@@ -383,6 +376,7 @@ class Arena implements Listener{
 			$p->setGamemode(Gamemode::SURVIVAL());
 			unset($this->spec[strtolower($p->getName())]);
         }
+        $this->winners = [];
     }
     public function saveInv(Player $p) {
         $items = [];
@@ -411,9 +405,7 @@ class Arena implements Listener{
 		$event = new PlayerLoseArenaEvent($this->plugin, $p, $this, $ingame);
 		$event->call();
 		$p->getInventory()->clearAll();
-		$this->checkWinners($p);
 		unset($this->ingamep[strtolower($p->getName())]);
-
 		if ($this->data['arena']['spectator_mode'] == 'true') {
 			$this->spec[strtolower($p->getName())] = $p;
 			$p->setGamemode(Gamemode::SPECTATOR());
@@ -453,34 +445,30 @@ class Arena implements Listener{
     public function getMinPlayers() {
         return $this->data['arena']['min_players'];
     }
+
     public function checkWinners(Player $p) {
-        if(count($this->ingamep) <= 3) {
-            $this->winners[count($this->ingamep)] = $p->getName();
-        }
-    }
+		if(count($this->ingamep) <= 3) {
+			array_push($this->winners, $p->getName());
+		}
+	}
 
     public function broadcastResults() {
-        if($this->plugin->getServer()->getPlayerExact($this->winners[1]) instanceof Player) {
-            $this->giveReward($this->plugin->getServer()->getPlayerExact($this->winners[1]));
-            $event = new PlayerWinArenaEvent($this->plugin, $this->plugin->getServer()->getPlayerExact($this->winners[1]), $this);
-            $event->call();
-        }
-        if(!isset($this->winners[1])) $this->winners[1] = "---";
-        if(!isset($this->winners[2])) $this->winners[2] = "---";
-        if(!isset($this->winners[3])) $this->winners[3] = "---";
-        $vars = ['%1', '%2', '%3', '%4'];
-        $replace = [$this->id, $this->winners[1], $this->winners[2], $this->winners[3]];
-        $msg = str_replace($vars, $replace, $this->plugin->getMsg('end_game'));
-        $levels = explode(",", $this->data['arena']['finish_msg_levels']);
-        foreach($levels as $level) {
-            $lvl = $this->plugin->getServer()->getWorldManager()->getWorldByName($level);
-            if($lvl instanceof World) {
-                foreach($lvl->getPlayers() as $p) {
-                    $p->sendMessage($msg);
-                }
-            }
-        }
-    }
+		foreach($this->winners as $p) {
+			$this->giveReward($this->plugin->getServer()->getPlayerExact($p));
+			//$event = new PlayerWinArenaEvent($this->plugin, $this->plugin->getServer()->getPlayerExact($this->winners[0]), $this);
+			//$event->call();
+		}
+		if(!isset($this->winners[0])) $this->winners[0] = "---";
+		if(!isset($this->winners[1])) $this->winners[1] = "---";
+		if(!isset($this->winners[2])) $this->winners[2] = "---";
+		$vars = ['%1', '%2', '%3'];
+		$replace = [$this->winners[0], $this->winners[1], $this->winners[2]];
+		$msg = str_replace($vars, $replace, $this->plugin->getMsg('end_game'));
+		$ingame = array_merge($this->ingamep, $this->lobbyp, $this->spec);
+		foreach($ingame as $p) {
+			$p->sendMessage($msg);
+		}
+	}
 
     public function setColor($color) {
         ($event = new ArenaColorChangeEvent($this->plugin, $this, $this->currentColor, $color));
@@ -562,7 +550,14 @@ class Arena implements Listener{
         }
         if(isset($this->data['arena']['money_reward'])) {
         if($this->data['arena']['money_reward'] !== null && $this->plugin->economy !== null) {
-            $money = $this->data['arena']['money_reward'];
+
+            if (count($this->winners) === 3) {
+				$money = ($this->data['arena']['money_reward'] / 3);
+			} elseif (count($this->winners) === 2) {
+				$money = ($this->data['arena']['money_reward'] / 2);
+			} else {
+				$money = $this->data['arena']['money_reward'];
+			}
 			$ec = $this->plugin->economy;
             switch($this->plugin->pluginName) {
                 case "EconomyAPI":
