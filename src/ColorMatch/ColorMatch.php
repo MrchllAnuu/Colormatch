@@ -18,6 +18,7 @@ use pocketmine\plugin\Plugin;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
+use Throwable;
 
 class ColorMatch extends PluginBase implements Listener{
 
@@ -108,7 +109,7 @@ class ColorMatch extends PluginBase implements Listener{
 		if(!(is_numeric($arena->getNested("signs.join_sign_x")) && is_numeric($arena->getNested("signs.join_sign_y")) && is_numeric($arena->getNested("signs.join_sign_z")) && is_string($arena->getNested("signs.join_sign_world")) && is_string($arena->getNested("signs.status_line_1")) && is_string($arena->getNested("signs.status_line_2")) && is_string($arena->getNested("signs.status_line_3")) && is_string($arena->getNested("signs.status_line_4")) && is_numeric($arena->getNested("signs.return_sign_x")) && is_numeric($arena->getNested("signs.return_sign_y")) && is_numeric($arena->getNested("signs.return_sign_z")) && is_string($arena->getNested("arena.arena_world")) && is_numeric($arena->getNested("arena.join_position_x")) && is_numeric($arena->getNested("arena.join_position_y")) && is_numeric($arena->getNested("arena.join_position_z")) && is_numeric($arena->getNested("arena.lobby_position_x")) && is_numeric($arena->getNested("arena.lobby_position_y")) && is_numeric($arena->getNested("arena.lobby_position_z")) && is_numeric($arena->getNested("arena.first_corner_x")) && is_numeric($arena->getNested("arena.first_corner_z")) && is_numeric($arena->getNested("arena.second_corner_x")) && is_numeric($arena->getNested("arena.second_corner_z")) && is_numeric($arena->getNested("arena.spec_spawn_x")) && is_numeric($arena->getNested("arena.spec_spawn_y")) && is_numeric($arena->getNested("arena.spec_spawn_z")) && is_numeric($arena->getNested("arena.leave_position_x")) && is_numeric($arena->getNested("arena.leave_position_y")) && is_numeric($arena->getNested("arena.leave_position_z")) && is_string($arena->getNested("arena.leave_position_world")) && is_numeric($arena->getNested("arena.max_game_time")) && is_numeric($arena->getNested("arena.max_players")) && is_numeric($arena->getNested("arena.min_players")) && is_numeric($arena->getNested("arena.starting_time")) && is_numeric($arena->getNested("arena.color_wait_time")) && is_numeric($arena->getNested("arena.floor_y")) && is_numeric($arena->getNested("arena.money_reward")))) {
 			return false;
 		}
-		if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "terracotta" || strtolower($arena->get("material")) == "glass" || strtolower($arena->get("material")) == "concrete") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))) {
+		if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "terracotta" || strtolower($arena->get("material")) == "glass" || strtolower($arena->get("material")) == "concrete") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (substr_count($arena->getNested('arena.item_reward'), ':') == 2 && strlen((str_replace(':', '', $arena->getNested('arena.item_reward')))) >= 3) && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))) {
 			return false;
 		}
 		return true;
@@ -214,12 +215,16 @@ class ColorMatch extends PluginBase implements Listener{
 									break;
 								}
 								$this->getFile = new Config($this->getDataFolder()."arenas/$args[1].yml", Config::YAML);
-								if ($this->getFile->get('enabled') === 'true') {
-									$this->ins[$args[1]]->joinToArena($sender);
-									break;
+								foreach ($this->ins as $arena) {
+									$players = (array_merge($arena->ingamep, $arena->lobbyp, $arena->spec));
+									if (array_search($sender, $players) !== strtolower($sender->getName())) {
+										$this->ins[$args[1]]->joinToArena($sender);
+										break;
+									} else {
+										$sender->sendMessage($this->getPrefix() . $this->getMsg('cannot_rejoin'));
+									}
 								}
 								break;
-
 							case "leave":
 								if(!$sender->hasPermission('cm.command.leave')) {
 									$sender->sendMessage($this->getMsg ('has_not_permission'));
@@ -481,10 +486,26 @@ class ColorMatch extends PluginBase implements Listener{
 					$this->setters[strtolower($p->getName())]['type'] = 'setleavepos';
 					$p->sendMessage($this->getPrefix().$this->getMsg('break_block'));
 					return;
+				case 'itemreward':
+					$this->setters[strtolower($p->getName())]['type'] = 'itemreward';
+					$p->sendMessage($this->getPrefix().$this->getMsg('itemreward_set'));
+					return;
 				case 'done':
 					$p->sendMessage($this->getPrefix().$this->getMsg('disable_setup_mode'));
 					$this->reloadArena($this->setters[strtolower($p->getName())]['arena']);
 					unset($this->setters[strtolower($p->getName())]);
+					return;
+				case 'set':
+					try {
+						if ($this->setters[strtolower($p->getName())]['type'] == 'itemreward') {
+							$item = $p->getInventory()->getItemInHand();
+							$arena->setItemReward($item->getId() . ":" . $item->getMeta() . ":" . $item->getCount());
+							$p->sendMessage($this->getPrefix() . $this->getMsg('itemreward'));
+							unset($this->setters[strtolower($p->getName())]['type']);
+						}
+					} catch (Throwable $e) {
+						$p->sendMessage($this->getPrefix() . $this->getMsg('invalid_arguments'));
+					}
 					return;
 			}
 			$args = explode(' ', $msg);
@@ -509,7 +530,8 @@ class ColorMatch extends PluginBase implements Listener{
 						. $this->getMsg('help_maxtime')
 						. $this->getMsg('help_starttime')
 						. $this->getMsg('help_maxplayers')
-						. $this->getMsg('help_minplayers');
+						. $this->getMsg('help_minplayers')
+						. $this->getMsg('help_itemreward');
 					$helparray = [$help1, $help2, $help3];
 					if(isset($args[1])) {
 						if(intval($args[1]) >= 1 && intval($args[1]) <= 3) {

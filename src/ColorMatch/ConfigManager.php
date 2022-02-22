@@ -117,4 +117,8 @@ class ConfigManager{
 		$this->arena->set('enabled', $data);
 		$this->arena->save();
 	}
+	public function setItemReward($data) {
+		$this->arena->setNested('arena.item_reward', $data);
+		$this->arena->save();
+	}
 }

@@ -31,6 +31,7 @@ use pocketmine\utils\Config;
 use pocketmine\world\sound\NoteInstrument;
 use pocketmine\world\sound\NoteSound;
 use pocketmine\world\Position;
+use Throwable;
 
 class Arena implements Listener{
 
@@ -38,9 +39,9 @@ class Arena implements Listener{
     public $plugin;
     public $data;
 
-    public $lobbyp = [];
-    public $ingamep = [];
-    public $spec = [];
+    public array $lobbyp = [];
+    public array $ingamep = [];
+    public array $spec = [];
 
     public $game = 0;
 
@@ -53,6 +54,7 @@ class Arena implements Listener{
     public $setup = false;
     public $getFile;
 	private $players;
+	private array $rewardItem = [];
 
 	public function __construct($id, ColorMatch $plugin) {
         $this->id = $id;
@@ -376,7 +378,19 @@ class Arena implements Listener{
 			$p->setGamemode(Gamemode::SURVIVAL());
 			unset($this->spec[strtolower($p->getName())]);
         }
-        $this->winners = [];
+
+        foreach($this->winners as $pName) {
+        	if ($pName !== '---') {
+				list($id, $damage, $count) = $this->rewardItem;
+				$p = $this->plugin->getServer()->getPlayerExact($pName);
+				try {
+					$p->getInventory()->addItem(ItemFactory::getInstance()->get($id, $damage, $count));
+				} catch (Throwable $e) {
+					$this->plugin->getLogger()->error($this->plugin->getMsg('attempted_itemgive'));
+				}
+				$this->winners = [];
+			}
+		}
     }
     public function saveInv(Player $p) {
         $items = [];
@@ -541,16 +555,13 @@ class Arena implements Listener{
             foreach(explode(',', str_replace(' ', '', $this->data['arena']['item_reward'])) as $item) {
                 $exp = explode(':', $item);
                 if(isset($exp[0])) {
-                    list($id, $damage, $count) = $exp;
-                    if (ItemFactory::getInstance()->get($id, $damage, $count) instanceof Item) {
-                        $p->getInventory()->addItem($id, $damage, $count);
-                    }
+                    $this->rewardItem = $exp;
                 }
             }
         }
-        if(isset($this->data['arena']['money_reward'])) {
-        if($this->data['arena']['money_reward'] !== null && $this->plugin->economy !== null) {
 
+        if(isset($this->data['arena']['money_reward'])) {
+        if($this->data['arena']['money_reward'] !== null && intval($this->data['arena']['money_reward']) !== 0 && $this->plugin->economy !== null) {
             if (count($this->winners) === 3) {
 				$money = ($this->data['arena']['money_reward'] / 3);
 			} elseif (count($this->winners) === 2) {

@@ -27,5 +27,11 @@ Either schematic support or a better handling of floor tiles.
 
 Better handling of when a player wins.
 
+/cm top which allows players to see their and the top scoreboards of most rounds survived / most wins. <br>
+*This will use the same system the cosmetics manager will use (Database).
+
+A prefix system with things like Dancer, Party Animal etc. This will be based on the rounds survived. <br>
+*Low priority since servers will probably have their own prefix system and conflicts will ensue.
+
 
 

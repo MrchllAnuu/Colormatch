@@ -19,6 +19,8 @@ ingame: "&cGame is in progress."
 enable_setup_mode: "&6You are now in setup mode\n&a-> To leave, type &l&odone&r."
 disable_setup_mode: '&aArena saved.'
 arena_in_setup: "&cArena is in setup mode!"
+attempted_itemgive: "Attempted to give the player an item, but the configuration was incorrect. Please set the item reward using the setup function in-game."
+cannot_rejoin: "You cannot join a game while in-game."
 #reward for win
 get_money: "&aYou won $%1"
 #end game message
@@ -75,6 +77,7 @@ starttime: "&aStart time has been successfully updated."
 colortime: "&aColor change interval has been successfully updated."
 enable: "&aArena has been successfully updated."
 ecoreward: "&aEconomy Reward has been successfully updated."
+itemreward: "&aItem Reward has been successfully updated."
 ########################################
 #messages on help command in setup mode#
 ########################################
@@ -127,8 +130,10 @@ help_minplayers: "\n- &2minplayers &b<count> &l&5»&r&f Set players minimal coun
 help_enable: "\n- &2enable &b<true/false> &l&5»&r&f Enables or disables an arena"
 help_starttime: "\n- &2starttime &b<seconds> &l&5»&r&f Sets the lobby waiting time."
 help_ecoreward: "\n- &2ecoreward &b<dollars> &l&5»&r&f Sets the money reward for winning a game."
+help_itemreward: "\n- &2itemreward &l&5»&r&f Sets the item in your hand to be the reward."
 ######################
 #other setup messages#
 ######################
 break_block: "&aBreak a block to set the position."
-break_sign: "&aNow break a sign"
+break_sign: "&aNow break a sign."
+itemreward_set: "&aHold the item and the amount of it you want set as the reward. Then type 'set' to set the item."

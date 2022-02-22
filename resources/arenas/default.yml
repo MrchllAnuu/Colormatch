@@ -73,6 +73,6 @@ arena:
     #
     min_players: 4
     #Get an item reward [Item ID]
-    item_reward: 0
+    item_reward: "0"
     #Coin reward in dollars.
     money_reward: 0
