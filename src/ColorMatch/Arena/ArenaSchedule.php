@@ -25,7 +25,8 @@ class ArenaSchedule extends Task{
 
     public function __construct(Arena $arena) {
         $this->arena = $arena;
-        $this->line1 = str_replace("&", "§", $this->arena->data['signs']['status_line_1']);
+		$this->startTime = $this->arena->data['arena']['starting_time'];
+		$this->line1 = str_replace("&", "§", $this->arena->data['signs']['status_line_1']);
         $this->line2 = str_replace("&", "§", $this->arena->data['signs']['status_line_2']);
         $this->line3 = str_replace("&", "§", $this->arena->data['signs']['status_line_3']);
         $this->line4 = str_replace("&", "§", $this->arena->data['signs']['status_line_4']);
@@ -54,7 +55,6 @@ class ArenaSchedule extends Task{
         }
 
         if($this->arena->game === 0) {
-			$this->startTime = $this->arena->data['arena']['starting_time'];
 			$this->mainTime = $this->arena->data['arena']['max_game_time'];
 			$this->time = 0;
             if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true) {

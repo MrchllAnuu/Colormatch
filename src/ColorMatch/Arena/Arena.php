@@ -12,6 +12,7 @@ use pocketmine\block\BlockFactory;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\effect\EffectInstance;
 use pocketmine\entity\effect\VanillaEffects;
+use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
@@ -21,7 +22,6 @@ use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerKickEvent;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerDropItemEvent;
-use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\PlaySoundPacket;
@@ -132,12 +132,6 @@ class Arena implements Listener{
                 $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('ingame'));
                 return;
             }
-            if (!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['arena']['arena_world'])) {
-                $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['arena']['arena_world'], null);
-            }
-            if (!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['arena_world'])) {
-				$this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['arena_world']);
-			}
             $event = new PlayerJoinArenaEvent($this->plugin, $p, $this);
             $event->call();
             if ($event->isCancelled()) {
@@ -516,6 +510,12 @@ class Arena implements Listener{
             if ($this->getPlayerMode($e->getEntity()) === 1 && ($e->getFinalDamage() >= $e->getEntity()->getHealth())) {
             	$e->cancel();
             	$this->deathHandler($e->getEntity());
+            	$e->getEntity()->heal(new EntityRegainHealthEvent($e->getEntity(), $e->getEntity()->getMaxHealth(), EntityRegainHealthEvent::CAUSE_CUSTOM));
+            	if ($e->getEntity()->isOnFire()) {
+					$e->getEntity()->extinguish();
+					//Why doesn't this work is the question, the if statement is reached but extinguish doesn't work unless called later.
+				}
+
 			}
         }
     }

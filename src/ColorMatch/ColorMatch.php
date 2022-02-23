@@ -91,7 +91,6 @@ class ColorMatch extends PluginBase implements Listener{
 			}
 			else{
 				if($this->checkFile($arena) === true) {
-					$fname = basename($file);
 					$this->setArenasData($arena, basename($file, ".yml"));
 				}
 				else{
@@ -703,11 +702,9 @@ class ColorMatch extends PluginBase implements Listener{
 			$this->arenas[$name]['enabled'] = 'false';
 			return;
 		}
-		if($this->arenas[$name]['enabled'] === 'false') {
-			$this->setArenasData($arena, $name);
-			return;
-		}
 		$this->arenas[$name] = $arena->getAll();
+		//reload goes here
+		return;
 	}
 
 	public function getPlayerArena(Player $p) {
