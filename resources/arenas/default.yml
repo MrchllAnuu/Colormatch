@@ -66,8 +66,8 @@ arena:
     starting_time: 30
     #[seconds]
     color_wait_time: 5
-    #Arena finish
-    max_game_time: 300
+    #Maximum amount of rounds a game goes for.
+    max_rounds: 25
     #
     max_players: 10
     #

@@ -105,7 +105,7 @@ class ColorMatch extends PluginBase implements Listener{
 	}
 
 	public function checkFile(Config $arena) {
-		if(!(is_numeric($arena->getNested("signs.join_sign_x")) && is_numeric($arena->getNested("signs.join_sign_y")) && is_numeric($arena->getNested("signs.join_sign_z")) && is_string($arena->getNested("signs.join_sign_world")) && is_string($arena->getNested("signs.status_line_1")) && is_string($arena->getNested("signs.status_line_2")) && is_string($arena->getNested("signs.status_line_3")) && is_string($arena->getNested("signs.status_line_4")) && is_numeric($arena->getNested("signs.return_sign_x")) && is_numeric($arena->getNested("signs.return_sign_y")) && is_numeric($arena->getNested("signs.return_sign_z")) && is_string($arena->getNested("arena.arena_world")) && is_numeric($arena->getNested("arena.join_position_x")) && is_numeric($arena->getNested("arena.join_position_y")) && is_numeric($arena->getNested("arena.join_position_z")) && is_numeric($arena->getNested("arena.lobby_position_x")) && is_numeric($arena->getNested("arena.lobby_position_y")) && is_numeric($arena->getNested("arena.lobby_position_z")) && is_numeric($arena->getNested("arena.first_corner_x")) && is_numeric($arena->getNested("arena.first_corner_z")) && is_numeric($arena->getNested("arena.second_corner_x")) && is_numeric($arena->getNested("arena.second_corner_z")) && is_numeric($arena->getNested("arena.spec_spawn_x")) && is_numeric($arena->getNested("arena.spec_spawn_y")) && is_numeric($arena->getNested("arena.spec_spawn_z")) && is_numeric($arena->getNested("arena.leave_position_x")) && is_numeric($arena->getNested("arena.leave_position_y")) && is_numeric($arena->getNested("arena.leave_position_z")) && is_string($arena->getNested("arena.leave_position_world")) && is_numeric($arena->getNested("arena.max_game_time")) && is_numeric($arena->getNested("arena.max_players")) && is_numeric($arena->getNested("arena.min_players")) && is_numeric($arena->getNested("arena.starting_time")) && is_numeric($arena->getNested("arena.color_wait_time")) && is_numeric($arena->getNested("arena.floor_y")) && is_numeric($arena->getNested("arena.money_reward")))) {
+		if(!(is_numeric($arena->getNested("signs.join_sign_x")) && is_numeric($arena->getNested("signs.join_sign_y")) && is_numeric($arena->getNested("signs.join_sign_z")) && is_string($arena->getNested("signs.join_sign_world")) && is_string($arena->getNested("signs.status_line_1")) && is_string($arena->getNested("signs.status_line_2")) && is_string($arena->getNested("signs.status_line_3")) && is_string($arena->getNested("signs.status_line_4")) && is_numeric($arena->getNested("signs.return_sign_x")) && is_numeric($arena->getNested("signs.return_sign_y")) && is_numeric($arena->getNested("signs.return_sign_z")) && is_string($arena->getNested("arena.arena_world")) && is_numeric($arena->getNested("arena.join_position_x")) && is_numeric($arena->getNested("arena.join_position_y")) && is_numeric($arena->getNested("arena.join_position_z")) && is_numeric($arena->getNested("arena.lobby_position_x")) && is_numeric($arena->getNested("arena.lobby_position_y")) && is_numeric($arena->getNested("arena.lobby_position_z")) && is_numeric($arena->getNested("arena.first_corner_x")) && is_numeric($arena->getNested("arena.first_corner_z")) && is_numeric($arena->getNested("arena.second_corner_x")) && is_numeric($arena->getNested("arena.second_corner_z")) && is_numeric($arena->getNested("arena.spec_spawn_x")) && is_numeric($arena->getNested("arena.spec_spawn_y")) && is_numeric($arena->getNested("arena.spec_spawn_z")) && is_numeric($arena->getNested("arena.leave_position_x")) && is_numeric($arena->getNested("arena.leave_position_y")) && is_numeric($arena->getNested("arena.leave_position_z")) && is_string($arena->getNested("arena.leave_position_world")) && is_numeric($arena->getNested("arena.max_rounds")) && is_numeric($arena->getNested("arena.max_players")) && is_numeric($arena->getNested("arena.min_players")) && is_numeric($arena->getNested("arena.starting_time")) && is_numeric($arena->getNested("arena.color_wait_time")) && is_numeric($arena->getNested("arena.floor_y")) && is_numeric($arena->getNested("arena.money_reward")))) {
 			return false;
 		}
 		if(!((strtolower($arena->get("type")) == "furious" || strtolower($arena->get("type")) == "stoned" || strtolower($arena->get("type")) == "classic") && (strtolower($arena->get("material")) == "wool" || strtolower($arena->get("material")) == "terracotta" || strtolower($arena->get("material")) == "glass" || strtolower($arena->get("material")) == "concrete") && (strtolower($arena->getNested("signs.enable_status")) == "true" || strtolower($arena->getNested("signs.enable_status")) == "false") && (strtolower($arena->getNested("arena.spectator_mode")) == "true" || strtolower($arena->getNested("arena.spectator_mode")) == "false") && (substr_count($arena->getNested('arena.item_reward'), ':') == 2 && strlen((str_replace(':', '', $arena->getNested('arena.item_reward')))) >= 3) && (strtolower($arena->get("enabled")) == "true" || strtolower($arena->get("enabled")) == "false"))) {
@@ -526,7 +526,7 @@ class ColorMatch extends PluginBase implements Listener{
 						. $this->getMsg('help_enable');
 					$help3 = $this->getMsg('help_allowspectator')
 						. $this->getMsg('help_signupdatetime')
-						. $this->getMsg('help_maxtime')
+						. $this->getMsg('help_maxrounds')
 						. $this->getMsg('help_starttime')
 						. $this->getMsg('help_maxplayers')
 						. $this->getMsg('help_minplayers')
@@ -617,13 +617,13 @@ class ColorMatch extends PluginBase implements Listener{
 				}
 				$p->sendMessage($this->getPrefix().$this->getMsg('allowspectator_help'));
 			}
-			elseif(strpos($msg, 'maxtime') === 0) {
-				if(!is_numeric(substr($msg, 8))) {
-					$p->sendMessage($this->getPrefix().$this->getMsg('maxtime_help'));
+			elseif(strpos($msg, 'maxrounds') === 0) {
+				if(!is_numeric(substr($msg, 10))) {
+					$p->sendMessage($this->getPrefix().$this->getMsg('maxrounds_help'));
 					return;
 				}
-				$arena->setMaxTime(substr($msg, 8));
-				$p->sendMessage($this->getPrefix().$this->getMsg('maxtime'));
+				$arena->setMaxRounds(substr($msg, 10));
+				$p->sendMessage($this->getPrefix().$this->getMsg('maxrounds'));
 			}
 			elseif(strpos($msg, 'maxplayers') === 0) {
 				if(!is_numeric(substr($msg, 11))) {
@@ -703,7 +703,6 @@ class ColorMatch extends PluginBase implements Listener{
 			return;
 		}
 		$this->arenas[$name] = $arena->getAll();
-		//reload goes here
 		return;
 	}
 

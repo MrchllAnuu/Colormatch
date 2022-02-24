@@ -8,7 +8,7 @@ use pocketmine\scheduler\Task;
 
 class ArenaSchedule extends Task{
 
-    private $mainTime;
+    private int $currentRound;
     private int $time = 0;
     private $startTime;
     private int $updateTime = 0;
@@ -55,7 +55,7 @@ class ArenaSchedule extends Task{
         }
 
         if($this->arena->game === 0) {
-			$this->mainTime = $this->arena->data['arena']['max_game_time'];
+			$this->currentRound = 1;
 			$this->time = 0;
             if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true) {
                 $this->startTime--;
@@ -86,11 +86,10 @@ class ArenaSchedule extends Task{
         }
         if($this->arena->game === 1) {
             $this->startTime = $this->arena->data['arena']['starting_time'];
-            $this->mainTime--;
-            if($this->mainTime === 0) {
+            if($this->currentRound > $this->arena->data['arena']['max_rounds']) {
                 $this->arena->stopGame();
             } else {
-                if($this->time == $this->arena->data['arena']['color_wait_time']) {
+                if ($this->time == $this->arena->data['arena']['color_wait_time']) {
 					$this->arena->gamePopup("freeze");
 					$this->arena->playEndingSound(4);
                     $this->arena->removeAllExpectOne();
@@ -107,13 +106,14 @@ class ArenaSchedule extends Task{
 					$this->arena->playEndingSound(3);
 					$this->arena->gamePopup(1);
 				}
-                if($this->time == $this->arena->data['arena']['color_wait_time'] + 3) {
+                if ($this->time == $this->arena->data['arena']['color_wait_time'] + 3) {
+					$this->currentRound++;
                     $this->time = 0;
                     $this->arena->setColor(rand(0, 15));
                     $this->arena->resetFloor();
 					$this->arena->gamePopup("wait");
                 }
-                if(count($this->arena->ingamep) <= 1) {
+                if (count($this->arena->ingamep) <= 1) {
                     $this->arena->checkAlive();
                 }
                 $this->time++;

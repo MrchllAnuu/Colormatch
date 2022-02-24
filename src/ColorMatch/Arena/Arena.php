@@ -290,7 +290,7 @@ class Arena implements Listener{
 					break;
 				case 4:
 					$sound = PlaySoundPacket::create("mob.bat.takeoff", $p->getPosition()->x, $p->getPosition()->y, $p->getPosition()->z, 1, 0.8);
-					$p->getServer()->broadcastPackets($ingame, [$sound]);
+					$p->getServer()->broadcastPackets([$p], [$sound]);
 					break;
 			}
 		}

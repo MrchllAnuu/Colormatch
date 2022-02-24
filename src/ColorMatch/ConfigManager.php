@@ -93,8 +93,8 @@ class ConfigManager{
 		$this->arena->setNested('arena.leave_position_world', $level);
 		$this->arena->save();
 	}
-	public function setMaxTime($data) {
-		$this->arena->setNested('arena.max_game_time', $data);
+	public function setMaxRounds($data) {
+		$this->arena->setNested('arena.max_rounds', $data);
 		$this->arena->save();
 	}
 	public function setMaxPlayers($data) {

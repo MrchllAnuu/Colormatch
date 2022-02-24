@@ -16,11 +16,18 @@ class PlayerLoseArenaEvent extends PluginEvent {
         parent::__construct($plugin);
         $this->player = $player;
         $this->arena = $arena;
-		$sound = PlaySoundPacket::create("ambient.weather.thunder", $player->getPosition()->x, $this->arena->data['arena']['floor_y'], $player->getPosition()->z, 1, 1);
-		$player->getServer()->broadcastPackets($ingame, [$sound]);
+        $this->playDeathSound($ingame);
+
     }
     
     public function getPlayer() {
         return $this->player;
     }
+
+    private function playDeathSound($ingame) {
+		foreach ($ingame as $p) {
+			$sound = PlaySoundPacket::create("ambient.weather.thunder", $p->getPosition()->x, $p->getPosition()->y, $p->getPosition()->z, 0.8, 1);
+			$this->player->getServer()->broadcastPackets([$p], [$sound]);
+		}
+	}
 }
