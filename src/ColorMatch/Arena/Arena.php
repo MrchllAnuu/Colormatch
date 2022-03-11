@@ -8,8 +8,8 @@ use ColorMatch\Events\PlayerLoseArenaEvent;
 //use ColorMatch\Events\PlayerWinArenaEvent;
 use ColorMatch\Events\ArenaColorChangeEvent;
 use ColorMatch\Utils\GetFormattingColor;
-use pocketmine\block\BlockFactory;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\data\bedrock\DyeColorIdMap;
 use pocketmine\entity\effect\EffectInstance;
 use pocketmine\entity\effect\VanillaEffects;
 use pocketmine\event\entity\EntityRegainHealthEvent;
@@ -22,7 +22,8 @@ use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerKickEvent;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerDropItemEvent;
-use pocketmine\item\ItemFactory;
+use pocketmine\item\Item;
+use pocketmine\item\LegacyStringToItemParser;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\PlaySoundPacket;
 use pocketmine\player\GameMode;
@@ -31,7 +32,6 @@ use pocketmine\utils\Config;
 use pocketmine\world\sound\NoteInstrument;
 use pocketmine\world\sound\NoteSound;
 use pocketmine\world\Position;
-use Throwable;
 
 class Arena implements Listener{
 
@@ -54,7 +54,6 @@ class Arena implements Listener{
     public $setup = false;
     public $getFile;
 	private $players;
-	private array $rewardItem = [];
 
 	public function __construct($id, ColorMatch $plugin) {
         $this->id = $id;
@@ -168,12 +167,6 @@ class Arena implements Listener{
         if(isset($this->players[strtolower($p->getName())]['arena'])) {
             unset($this->players[strtolower($p->getName())]['arena']);
         }
-        if(!$this->plugin->getServer()->getWorldManager()->isWorldGenerated($this->data['arena']['leave_position_world'])) {
-            $this->plugin->getServer()->getWorldManager()->generateWorld($this->data['arena']['leave_position_world'], null);
-        }
-        if(!$this->plugin->getServer()->getWorldManager()->isWorldLoaded($this->data['arena']['leave_position_world'])) {
-            $this->plugin->getServer()->getWorldManager()->loadWorld($this->data['arena']['leave_position_world']);
-        }
         $p->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('leave'));
         $this->loadInv($p);
         $p->getEffects()->clear();
@@ -192,9 +185,6 @@ class Arena implements Listener{
 					$p->teleport(new Position($this->data['arena']['join_position_x'], $this->data['arena']['join_position_y'], $this->data['arena']['join_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
 					$this->giveEffect($p);
 				}
-				$this->setColor(rand(0, 15));
-				$this->gamePopup('wait');
-                $this->resetFloor();
             }
         }
         return true;
@@ -214,19 +204,26 @@ class Arena implements Listener{
 	}
 
    public function resetFloor() {
+		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+		foreach ($ingame as $p) {
+			$p->getInventory()->clearAll();
+		}
         $colorcount = 0;
         $blocks = 0;
-        $y = $this->data['arena']['floor_y'];
+
+	   $y = $this->data['arena']['floor_y'];
         $level =  $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world']);
         for($x = min($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x <= max($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x += 3) {
             for($z = min($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z <= max($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z += 3) {
                 $blocks++;
-                $color = rand(0, 15);
+				$color = rand(0, 15);
+				$color = DyeColorIdMap::getInstance()->fromId($color);
                 if($colorcount === 0 && $blocks === 15 || $colorcount <= 1 && $blocks === 40) {
-                    $color = $this->currentColor;
+                    $color = DyeColorIdMap::getInstance()->fromId($this->currentColor);
                 }
-                $block = BlockFactory::getInstance()->get($this->getBlock(), $color);
-                if($block->getMeta() === $this->currentColor) {
+                $block = $this->getBlock();
+                $block->setColor($color);
+                if(strtoupper($block->getColor()->name()) === $this->currentColor) {
                     $colorcount++;
                 }
 				//Switching this plugin to schematics ASAP
@@ -245,16 +242,16 @@ class Arena implements Listener{
 
     public function getBlock() {
         if(strtolower($this->data['material']) == "wool") {
-            return VanillaBlocks::WOOL()->getId();
+            return VanillaBlocks::WOOL();
         }
         elseif(strtolower($this->data['material']) == "terracotta") {
-            return VanillaBlocks::STAINED_CLAY()->getId();
+            return VanillaBlocks::STAINED_CLAY();
         }
         elseif(strtolower($this->data['material']) == "glass") {
-            return VanillaBlocks::STAINED_GLASS()->getId();
+            return VanillaBlocks::STAINED_GLASS();
         }
         elseif(strtolower($this->data['material']) == "concrete") {
-            return VanillaBlocks::CONCRETE()->getId();
+            return VanillaBlocks::CONCRETE();
         }
         return false;
     }
@@ -265,8 +262,8 @@ class Arena implements Listener{
         $color = $this->currentColor;
         for($x = min($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x <= max($this->data['arena']['first_corner_x'], $this->data['arena']['second_corner_x']); $x++) {
             for($z = min($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z <= max($this->data['arena']['first_corner_z'], $this->data['arena']['second_corner_z']); $z++) {
-                if($level->getBlock(new Vector3($x, $y, $z))->getMeta() !== $color && $level->getBlock(new Vector3($x, $y, $z))->getId() === $this->getBlock()) {
-                    $level->setBlock(new Vector3($x, $y, $z), BlockFactory::getInstance()->get(0, 0), false, true);
+                if($level->getBlock(new Vector3($x, $y, $z))->getMeta() !== $color && $level->getBlock(new Vector3($x, $y, $z))->getName() === $this->getBlock()->getName()) {
+                    $level->setBlock(new Vector3($x, $y, $z), VanillaBlocks::AIR(), true);
                 }
             }
         }
@@ -276,7 +273,7 @@ class Arena implements Listener{
 		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
 		foreach ($ingame as $p) {
 			switch ($soundStage) {
-				case 1:
+				case 3:
 					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::DOUBLE_BASS(),24), [$p]);
 					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::PIANO(),12), [$p]);
 					break;
@@ -284,11 +281,11 @@ class Arena implements Listener{
 					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::DOUBLE_BASS(),20), [$p]);
 					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::PIANO(),8), [$p]);
 					break;
-				case 3:
+				case 1:
 					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::DOUBLE_BASS(),15), [$p]);
 					$p->getWorld()->addSound($p->getPosition(), new NoteSound(NoteInstrument::PIANO(),3), [$p]);
 					break;
-				case 4:
+				case 0:
 					$sound = PlaySoundPacket::create("mob.bat.takeoff", $p->getPosition()->x, $p->getPosition()->y, $p->getPosition()->z, 1, 0.8);
 					$p->getServer()->broadcastPackets([$p], [$sound]);
 					break;
@@ -298,24 +295,28 @@ class Arena implements Listener{
 
 	public function gamePopup($stage) {
 		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
+		$colorName = DyeColorIdMap::getInstance()->fromId($this->currentColor)->getDisplayName();
 		$color = new GetFormattingColor();
 		$color = $color->get($this->currentColor);
 		foreach ($ingame as $p) {
 			switch ($stage) {
 				case 3:
-					$p->sendPopup($color . '⬜⬛⬛⬛⬛⬛⬜');
+					$p->sendPopup($color . '⬜⬛⬛' . $colorName. '⬛⬛⬜');
 					break;
 				case 2:
-					$p->sendPopup($color . '⬜⬜⬛⬛⬛⬜⬜');
+					$p->sendPopup($color . '⬜⬜⬛' . $colorName. '⬛⬜⬜');
 					break;
 				case 1:
-					$p->sendPopup($color . '⬜⬜⬜⬛⬜⬜⬜');
+					$p->sendPopup($color . '⬜⬜⬜' . $colorName. '⬜⬜⬜');
+					break;
+				case 0:
+					$p->sendPopup('§f§lFREEZE');
+					break;
+				case '3+':
+					$p->sendPopup($color . '⬛⬛⬛' . $colorName. '⬛⬛⬛');
 					break;
 				case 'wait':
-					$p->sendPopup($color . '⬛⬛⬛⬛⬛⬛⬛');
-					break;
-				case 'freeze':
-					$p->sendPopup('§f§lFREEZE');
+					$p->sendPopup('§f§lWaiting...');
 					break;
 			}
 		}
@@ -346,7 +347,7 @@ class Arena implements Listener{
 		$this->game = 0;
 		$this->broadcastResults();
 		$this->unsetAllPlayers();
-    	$this->resetFloor();
+		$this->resetFloor();
 		return;
 }
     public function abruptStop() {
@@ -372,41 +373,52 @@ class Arena implements Listener{
 			$p->setGamemode(Gamemode::SURVIVAL());
 			unset($this->spec[strtolower($p->getName())]);
         }
-
-        foreach($this->winners as $pName) {
-        	if ($pName !== '---') {
-				list($id, $damage, $count) = $this->rewardItem;
+		foreach($this->winners as $pName) {
+			if ($pName !== '---') {
 				$p = $this->plugin->getServer()->getPlayerExact($pName);
-				try {
-					$p->getInventory()->addItem(ItemFactory::getInstance()->get($id, $damage, $count));
-				} catch (Throwable $e) {
-					$this->plugin->getLogger()->error($this->plugin->getMsg('attempted_itemgive'));
+				if ($this->data['arena']['item_reward'] !== 0 && $this->data['arena']['item_reward'] !== null) {
+					$p->getInventory()->addItem(Item::jsonDeserialize($this->data['arena']['item_reward']));
 				}
 				$this->winners = [];
 			}
 		}
     }
+
     public function saveInv(Player $p) {
         $items = [];
+        $armorItems = [];
+        foreach ($p->getArmorInventory()->getContents() as $slot=>&$item) {
+        	$armorItems[$slot] = $item;
+		}
         foreach($p->getInventory()->getContents() as $slot=>&$item) {
-            $items[$slot] = implode(":", [$item->getId(), $item->getMeta(), $item->getCount()]);
+            $items[$slot] = $item;
         }
         $this->plugin->inv[strtolower($p->getName())] = $items;
+        $this->plugin->armorInv[strtolower($p->getName())] = $armorItems;
+		$this->plugin->offHandItem[strtolower($p->getName())] = $p->getOffHandInventory()->getContents();
         $p->getInventory()->clearAll();
-    }
+        $p->getArmorInventory()->clearAll();
+		$p->getOffHandInventory()->clearAll();
+	}
 
     public function loadInv(Player $p) {
-        if(!($p->isOnline())) {
-            return;
-        }
-        $p->getInventory()->clearAll();
-        foreach($this->plugin->inv[strtolower($p->getName())] as $slot => $i) {
-            list($id, $dmg, $count) = explode(":", $i);
-            $item = ItemFactory::getInstance()->get($id, $dmg, $count);
-            $p->getInventory()->setItem($slot, $item);
-            unset($this->plugin->inv[strtolower($p->getName())]);
-        }
-    }
+		if (!($p->isOnline())) {
+			return;
+		}
+		$p->getInventory()->clearAll();
+		foreach ($this->plugin->inv[strtolower($p->getName())] as $slot => $i) {
+			$p->getInventory()->setItem($slot, $i);
+			unset($this->plugin->inv[strtolower($p->getName())]);
+		}
+		foreach ($this->plugin->armorInv[strtolower($p->getName())] as $slot => $i) {
+			$p->getArmorInventory()->setItem($slot, $i);
+			unset($this->plugin->armorInv[strtolower($p->getName())]);
+		}
+		foreach ($this->plugin->offHandItem[strtolower($p->getName())] as $slot => $i) {
+			$p->getOffHandInventory()->setItem($slot, $i);
+			unset($this->plugin->offHandItem[strtolower($p->getName())]);
+		}
+	}
 
 	public function deathHandler(Player $p) {
 		$ingame = array_merge($this->lobbyp, $this->ingamep, $this->spec);
@@ -479,16 +491,18 @@ class Arena implements Listener{
 	}
 
     public function setColor($color) {
-        ($event = new ArenaColorChangeEvent($this->plugin, $this, $this->currentColor, $color));
+        $event = new ArenaColorChangeEvent($this->plugin, $this, $this->currentColor, $color);
 		$event->call();
         if($event->isCancelled()) {
             return;
         }
         $this->currentColor = $event->getNewColor();
+		$item = LegacyStringToItemParser::getInstance()->parse($this->getBlock()->getId() . ":" . $this->currentColor);
+		$item->setCount(1);
         foreach($this->ingamep as $p) {
-            $p->getInventory()->setItem(3, ItemFactory::getInstance()->get($this->getBlock(), $color, 1));
-            $p->getInventory()->setItem(4, ItemFactory::getInstance()->get($this->getBlock(), $color, 1));
-            $p->getInventory()->setItem(5, ItemFactory::getInstance()->get($this->getBlock(), $color, 1));
+			$p->getInventory()->setItem(3, $item);
+			$p->getInventory()->setItem(4, $item);
+			$p->getInventory()->setItem(5, $item);
         }
     }
 
@@ -548,18 +562,10 @@ class Arena implements Listener{
     public function getStatus() {
         if($this->game === 0) return "lobby";
         if($this->game === 1) return "ingame";
+        return false;
     }
 
     public function giveReward(Player $p) {
-        if(isset($this->data['arena']['item_reward']) && $this->data['arena']['item_reward'] !== null && intval($this->data['arena']['item_reward']) !== 0) {
-            foreach(explode(',', str_replace(' ', '', $this->data['arena']['item_reward'])) as $item) {
-                $exp = explode(':', $item);
-                if(isset($exp[0])) {
-                    $this->rewardItem = $exp;
-                }
-            }
-        }
-
         if(isset($this->data['arena']['money_reward'])) {
         if($this->data['arena']['money_reward'] !== null && intval($this->data['arena']['money_reward']) !== 0 && $this->plugin->economy !== null) {
             if (count($this->winners) === 3) {
@@ -571,9 +577,6 @@ class Arena implements Listener{
 			}
 			$ec = $this->plugin->economy;
             switch($this->plugin->pluginName) {
-                case "EconomyAPI":
-                    $ec->addMoney($p->getName(), $money);
-                    break;
                 case "BedrockEconomy":
                     $ec->getAPI()->addToPlayerBalance($p->getName(), $money);
                     break;

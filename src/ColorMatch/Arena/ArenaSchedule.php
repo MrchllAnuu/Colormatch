@@ -10,8 +10,10 @@ class ArenaSchedule extends Task{
 
     private int $currentRound;
     private int $time = 0;
-    private $startTime;
+    private $lobbyTime;
     private int $updateTime = 0;
+    private int $colorTime;
+    private float $percentage;
 
     private $forcestart = false;
 
@@ -25,7 +27,8 @@ class ArenaSchedule extends Task{
 
     public function __construct(Arena $arena) {
         $this->arena = $arena;
-		$this->startTime = $this->arena->data['arena']['starting_time'];
+        $this->resetVars();
+		$this->lobbyTime = $this->arena->data['arena']['lobby_time'];
 		$this->line1 = str_replace("&", "§", $this->arena->data['signs']['status_line_1']);
         $this->line2 = str_replace("&", "§", $this->arena->data['signs']['status_line_2']);
         $this->line3 = str_replace("&", "§", $this->arena->data['signs']['status_line_3']);
@@ -55,69 +58,70 @@ class ArenaSchedule extends Task{
         }
 
         if($this->arena->game === 0) {
-			$this->currentRound = 1;
-			$this->time = 0;
             if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true) {
-                $this->startTime--;
+                $this->lobbyTime--;
                 foreach ($this->arena->lobbyp as $p) {
-                    $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('starting')));
-                    if ($this->startTime === 1) {
-                        $p->sendPopup(str_replace("%1", $this->startTime, $this->arena->plugin->getMsg('starting_1_sec')));
-                    }
-                    if ($this->startTime === 0) {
-                        $p->sendPopup(('§aCommence The Game!'));
+                    $p->sendPopup(str_replace("%1", $this->lobbyTime, $this->arena->plugin->getMsg('starting')));
+                    if ($this->lobbyTime === 1) {
+                        $p->sendPopup(str_replace("%1", $this->lobbyTime, $this->arena->plugin->getMsg('starting_1_sec')));
                     }
                 }
-
-                if($this->startTime <= 0) {
-                    if(count($this->arena->lobbyp) >= $this->arena->getMinPlayers() || $this->forcestart === true) {
-                        $this->arena->startGame();
-                        $this->startTime = $this->arena->data['arena']['starting_time'];
-                        $this->forcestart = false;
-                    }
-                    else{
-                        $this->startTime = $this->arena->data['arena']['starting_time'];
-                    }
+                if ($this->lobbyTime <= 0) {
+                	$this->arena->startGame();
+                	$this->lobbyTime = $this->arena->data['arena']['lobby_time'];
+                	$this->forcestart = false;
                 }
-            }
-            else{
-                $this->startTime = $this->arena->data['arena']['starting_time'];
+            } else {
+                $this->lobbyTime = $this->arena->data['arena']['lobby_time'];
             }
         }
         if($this->arena->game === 1) {
-            $this->startTime = $this->arena->data['arena']['starting_time'];
+            $this->lobbyTime = $this->arena->data['arena']['lobby_time'];
             if($this->currentRound > $this->arena->data['arena']['max_rounds']) {
                 $this->arena->stopGame();
-            } else {
-                if ($this->time == $this->arena->data['arena']['color_wait_time']) {
-					$this->arena->gamePopup("freeze");
-					$this->arena->playEndingSound(4);
-                    $this->arena->removeAllExpectOne();
-                }
-                if ($this->time == $this->arena->data['arena']['color_wait_time'] - 3) {
-                	$this->arena->playEndingSound(1);
-                	$this->arena->gamePopup(3);
-				}
-				if ($this->time == $this->arena->data['arena']['color_wait_time'] - 2) {
-					$this->arena->playEndingSound(2);
-					$this->arena->gamePopup(2);
-				}
-				if ($this->time == $this->arena->data['arena']['color_wait_time'] - 1) {
-					$this->arena->playEndingSound(3);
-					$this->arena->gamePopup(1);
-				}
-                if ($this->time == $this->arena->data['arena']['color_wait_time'] + 3) {
-					$this->currentRound++;
-                    $this->time = 0;
-                    $this->arena->setColor(rand(0, 15));
-                    $this->arena->resetFloor();
-					$this->arena->gamePopup("wait");
-                }
-                if (count($this->arena->ingamep) <= 1) {
-                    $this->arena->checkAlive();
-                }
-                $this->time++;
+                $this->resetVars();
+                return;
             }
+            switch ($this->time) {
+				case 0:
+					$this->arena->removeAllExpectOne();
+					break;
+				case -3:
+					$this->currentRound++;
+					$this->setNewColorTime();
+					$this->arena->resetFloor();
+					$this->arena->gamePopup('wait');
+					break;
+				case -8:
+					$this->time = $this->colorTime;
+					$this->arena->setColor(rand(0, 15));
+					$this->arena->gamePopup('3+');
+					break;
+			}
+            if (count($this->arena->ingamep) <= 1) {
+            	$this->arena->checkAlive();
+            }
+			$this->arena->playEndingSound($this->time);
+			$this->arena->gamePopup($this->time);
+            $this->time--;
         }
     }
+
+    private function resetVars() {
+		$this->currentRound = 0;
+		$this->colorTime = 5;
+		$this->time = -3;
+		$this->percentage = 0.2;
+	}
+
+    private function setNewColorTime() {
+    	$percent = $this->currentRound / $this->arena->data['arena']['max_rounds'];
+    	if ($percent >= $this->percentage && $percent <= ($this->percentage + 0.1) && $this->colorTime > 1) {
+    		$this->colorTime--;
+    		$this->arena->messageArenaPlayers("Time has been reduced to " . $this->colorTime . "s.");
+    		if ($this->percentage < 1) {
+				$this->percentage = $this->percentage + 0.2;
+			}
+    	}
+	}
 }

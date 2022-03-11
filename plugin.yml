@@ -43,6 +43,9 @@ permissions:
     cm.command.delete:
         description: "Delete an arena."
         default: op
+    cm.command.toggle:
+        description: "Toggle an arena on or off."
+        default: op
     cm.sign:
         description: "Join using signs"
         default: true

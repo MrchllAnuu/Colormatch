@@ -34,7 +34,7 @@ signs:
     return_sign_z: 890
 #arena
 arena:
-    arena_world: "ColorMatch"
+    arena_world: "world"
     #arena world
     join_position_x: 320
     join_position_y: 40
@@ -63,7 +63,7 @@ arena:
     leave_position_z: 450
     leave_position_world: "world"
     #time (seconds)
-    starting_time: 30
+    lobby_time: 30
     #[seconds]
     color_wait_time: 5
     #Maximum amount of rounds a game goes for.

@@ -105,15 +105,11 @@ class ConfigManager{
 		$this->arena->setNested('arena.min_players', $data);
 		$this->arena->save();
 	}
-	public function setStartTime($data) {
-		$this->arena->setNested('arena.starting_time', $data);
+	public function setLobbyTime($data) {
+		$this->arena->setNested('arena.lobby_time', $data);
 		$this->arena->save();
 	}
-	public function setColorTime($data) {
-		$this->arena->setNested('arena.color_wait_time', $data);
-		$this->arena->save();
-	}
-	public function setEnable($data) {
+	public function setToggle($data) {
 		$this->arena->set('enabled', $data);
 		$this->arena->save();
 	}

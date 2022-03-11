@@ -7,37 +7,36 @@ class GetFormattingColor {
 	public function get($currentColor) {
 		switch($currentColor) {
 			case 0:
-				return "§f§lWHITE - ";
+				return "§f§l";
 			case 1:
-				return "§6§lORANGE - ";
+				return "§6§l";
 			case 2:
-				return "§d§lMAGENTA - ";
-			case 3:
-				return "§b§lLIGHT BLUE - ";
-			case 4:
-				return "§e§lYELLOW - ";
-			case 5:
-				return "§a§lLIME - ";
 			case 6:
-				return "§d§lPINK - ";
+				return "§d§l";
+			case 3:
+				return "§b§l";
+			case 4:
+				return "§e§l";
+			case 5:
+				return "§a§l";
 			case 7:
-				return "§8§lGRAY - ";
+				return "§8§l";
 			case 8:
-				return "§7§lLIGHT GRAY - ";
+				return "§7§l";
 			case 9:
-				return "§3§lCYAN - ";
+				return "§3§l";
 			case 10:
-				return "§5§lPURPLE - ";
+				return "§5§l";
 			case 11:
-				return "§1§lBLUE - ";
+				return "§1§l";
 			case 12:
-				return "§g§lBROWN - ";
+				return "§g§l";
 			case 13:
-				return "§2§lGREEN - ";
+				return "§2§l";
 			case 14:
-				return "§4§lRED - ";
+				return "§4§l";
 			case 15:
-				return "§0§lBLACK - ";
+				return "§0§l";
 		}
 		return "";
 	}
