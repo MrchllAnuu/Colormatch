@@ -178,13 +178,13 @@ class Arena implements Listener{
             if ($pl === null) {
                 return false;
             } else {
-				$this->game = 1;
-				foreach ($this->lobbyp as $p) {
-					unset($this->lobbyp[strtolower($p->getName())]);
-					$this->ingamep[strtolower($p->getName())] = $p;
-					$p->teleport(new Position($this->data['arena']['join_position_x'], $this->data['arena']['join_position_y'], $this->data['arena']['join_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
-					$this->giveEffect($p);
-				}
+            	$this->game = 1;
+            	foreach ($this->lobbyp as $p) {
+            		unset($this->lobbyp[strtolower($p->getName())]);
+            		$this->ingamep[strtolower($p->getName())] = $p;
+            		$p->teleport(new Position($this->data['arena']['join_position_x'], $this->data['arena']['join_position_y'], $this->data['arena']['join_position_z'], $this->plugin->getServer()->getWorldManager()->getWorldByName($this->data['arena']['arena_world'])));
+            		$this->giveEffect($p);
+            	}
             }
         }
         return true;
@@ -226,16 +226,16 @@ class Arena implements Listener{
                 if(strtoupper($block->getColor()->name()) === $this->currentColor) {
                     $colorcount++;
                 }
-				//Switching this plugin to schematics ASAP
+                //Switching this plugin to schematics ASAP
 				$level->setBlock(new Position($x, $y, $z, $level), $block, true);
-				$level->setBlock(new Position($x + 1, $y, $z, $level), $block, true);
-				$level->setBlock(new Position($x + 2, $y, $z, $level), $block, true);
-				$level->setBlock(new Position($x, $y, $z+1, $level), $block, true);
-				$level->setBlock(new Position($x, $y, $z+2, $level), $block, true);
-				$level->setBlock(new Position($x + 1, $y, $z + 1, $level), $block, true);
-				$level->setBlock(new Position($x + 1, $y, $z + 2, $level), $block, true);
-				$level->setBlock(new Position($x + 2, $y, $z + 1, $level), $block, true);
-				$level->setBlock(new Position($x + 2, $y, $z + 2, $level), $block, true);
+                $level->setBlock(new Position($x + 1, $y, $z, $level), $block, true);
+                $level->setBlock(new Position($x + 2, $y, $z, $level), $block, true);
+                $level->setBlock(new Position($x, $y, $z+1, $level), $block, true);
+                $level->setBlock(new Position($x, $y, $z+2, $level), $block, true);
+                $level->setBlock(new Position($x + 1, $y, $z + 1, $level), $block, true);
+                $level->setBlock(new Position($x + 1, $y, $z + 2, $level), $block, true);
+                $level->setBlock(new Position($x + 2, $y, $z + 1, $level), $block, true);
+                $level->setBlock(new Position($x + 2, $y, $z + 2, $level), $block, true);
             }
         }
     }
@@ -500,9 +500,9 @@ class Arena implements Listener{
 		$item = LegacyStringToItemParser::getInstance()->parse($this->getBlock()->getId() . ":" . $this->currentColor);
 		$item->setCount(1);
         foreach($this->ingamep as $p) {
-			$p->getInventory()->setItem(3, $item);
-			$p->getInventory()->setItem(4, $item);
-			$p->getInventory()->setItem(5, $item);
+        	$p->getInventory()->setItem(3, $item);
+        	$p->getInventory()->setItem(4, $item);
+        	$p->getInventory()->setItem(5, $item);
         }
     }
 
