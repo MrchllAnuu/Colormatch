@@ -41,7 +41,6 @@ class FormSetup {
 						break;
 				}
 			} else {
-				$this->plugin->ins[$this->arena]->setup = false;
 				$this->player->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('disable_setup_mode'));
 			}
 		});
@@ -91,7 +90,6 @@ class FormSetup {
 						break;
 				}
 			} else {
-				$this->plugin->ins[$this->arena]->setup = false;
 				$this->player->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('disable_setup_mode'));
 			}
 		});
@@ -124,7 +122,6 @@ class FormSetup {
 				$this->mainMenu();
 				return;
 			} else {
-				$this->plugin->ins[$this->arena]->setup = false;
 				$this->player->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('disable_setup_mode'));
 			}
 		});
@@ -156,7 +153,6 @@ class FormSetup {
 				$this->mainMenu();
 				return;
 			} else {
-				$this->plugin->ins[$this->arena]->setup = false;
 				$this->player->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('disable_setup_mode'));
 			}
 		});
@@ -188,7 +184,6 @@ class FormSetup {
 						break;
 				}
 			} else {
-				$this->plugin->ins[$this->arena]->setup = false;
 				$this->player->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('disable_setup_mode'));
 			}
 		});
@@ -206,7 +201,6 @@ class FormSetup {
 				$this->showRewardPage();
 				return;
 			} else {
-				$this->plugin->ins[$this->arena]->setup = false;
 				$this->player->sendMessage($this->plugin->getPrefix().$this->plugin->getMsg('disable_setup_mode'));
 			}
 		});

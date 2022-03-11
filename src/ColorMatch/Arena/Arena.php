@@ -69,8 +69,7 @@ class Arena implements Listener{
         $this->plugin->getScheduler()->scheduleRepeatingTask(new ArenaSchedule($this), 20);
     }
 
-    public function onBlockTouch(PlayerInteractEvent $e)
-    {
+    public function onBlockTouch(PlayerInteractEvent $e) {
         $b = $e->getBlock()->getPosition();
         $p = $e->getPlayer();
         if ($p->hasPermission("cm.sign") || $this->plugin->getServer()->isOp($p->getName())) {
@@ -119,10 +118,6 @@ class Arena implements Listener{
     public function joinToArena(Player $p)
     {
         if ($p->hasPermission("cm.access") || $this->plugin->getServer()->isOp($p->getName())) {
-            if ($this->setup === true) {
-                $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('arena_in_setup'));
-                return;
-            }
             if (count($this->lobbyp) >= $this->getMaxPlayers()) {
                 $p->sendMessage($this->plugin->getPrefix() . $this->plugin->getMsg('game_full'));
                 return;

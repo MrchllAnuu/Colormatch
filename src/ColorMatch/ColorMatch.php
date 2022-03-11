@@ -69,14 +69,12 @@ class ColorMatch extends PluginBase implements Listener{
 			if (strtolower($arena->get("enabled")) === "false") {
 				$this->arenas[basename($file, ".yml")]['enabled'] = 'false';
 				$this->getLogger()->error("Arena \"$fname\" is currently disabled.");
-				return;
-			}
-			if ($this->checkFile($arena) === false) {
+			} else if ($this->checkFile($arena) === false) {
 				$this->arenas[basename($file, ".yml")]['enabled'] = 'false';
 				$this->getLogger()->error("Arena \"$fname\" is not set properly.");
-				return;
+			} else {
+				$this->setArenasData($arena, basename($file, ".yml"));
 			}
-			$this->setArenasData($arena, basename($file, ".yml"));
 		}
 	}
 
@@ -150,7 +148,6 @@ class ColorMatch extends PluginBase implements Listener{
 										$sender->sendMessage($this->getPrefix() . $this->getMsg('arena_running'));
 										break;
 									}
-									$a->setup = true;
 								}
 								$form = new FormSetup($args[1], $this, $sender);
 								$form->mainMenu();
@@ -223,8 +220,7 @@ class ColorMatch extends PluginBase implements Listener{
 									$sender->sendMessage($this->getPrefix() . $this->getMsg('arena_doesnt_exist'));
 									break;
 								}
-								$this->getFile = new Config($this->getDataFolder() . "arenas/$args[1].yml", Config::YAML);
-								if ($this->getFile->get('enabled') === 'false') {
+								if (!$this->isArenaSet($args[1])) {
 									$sender->sendMessage($this->getPrefix() . $this->getMsg('arena_not_enabled'));
 									break;
 								}
@@ -280,8 +276,7 @@ class ColorMatch extends PluginBase implements Listener{
 									$sender->sendMessage($this->getPrefix() . $this->getMsg('arena_doesnt_exist'));
 									break;
 								}
-								$this->getFile = new Config($this->getDataFolder() . "arenas/$args[1].yml", Config::YAML);
-								if ($this->getFile->get('enabled') === 'false') {
+								if (!$this->isArenaSet($args[1])) {
 									$sender->sendMessage($this->getPrefix() . $this->getMsg('arena_not_enabled'));
 									break;
 								}
@@ -301,8 +296,7 @@ class ColorMatch extends PluginBase implements Listener{
 									$sender->sendMessage($this->getPrefix().$this->getMsg('kick_help'));
 									break;
 								}
-								$this->getFile = new Config($this->getDataFolder() . "arenas/$args[2].yml", Config::YAML);
-								if ($this->getFile->get('enabled') === 'false') {
+								if (!$this->isArenaSet($args[1])) {
 									$sender->sendMessage($this->getPrefix() . $this->getMsg('arena_not_enabled'));
 									break;
 								}
@@ -433,8 +427,6 @@ class ColorMatch extends PluginBase implements Listener{
 					$arena->setItemReward($item->jsonSerialize());
 				}
 				$p->sendMessage($this->getPrefix() . $this->getMsg('disable_setup_mode'));
-				$a = $this->ins[$this->setters[strtolower($p->getName())]['arena']];
-				$a->setup = false;
 				unset($this->setters[strtolower($p->getName())]['arena']);
 				return;
 			} else {
@@ -458,25 +450,8 @@ class ColorMatch extends PluginBase implements Listener{
 			unset($this->selectors[strtolower($p->getName())]);
 		}
 		if(isset($this->setters[strtolower($p->getName())])) {
-			$this->reloadArena($this->setters[strtolower($p->getName())]['arena']);
-			if($this->isArenaSet($this->setters[strtolower($p->getName())]['arena'])) {
-				$a = new Arena($this->setters[strtolower($p->getName())]['arena'], $this);
-				$a->setup = false;
-			}
 			unset($this->setters[strtolower($p->getName())]);
 		}
-	}
-
-	public function reloadArena($name) {
-		$arena = new Config($this->getDataFolder()."arenas/$name.yml");
-		if(isset($this->ins[$name])) $this->ins[$name]->setup = false;
-		if(!$this->checkFile($arena) || $arena->get('enabled') === "false") {
-			$this->arenas[$name] = $arena->getAll();
-			$this->arenas[$name]['enabled'] = 'false';
-			return;
-		}
-		$this->arenas[$name] = $arena->getAll();
-		return;
 	}
 
 	public function getPlayerArena(Player $p) {
