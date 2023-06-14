@@ -1,6 +1,6 @@
 name: ColorMatch
-version: 1.3.0
-api: 4.0.0
+version: 2.0.0
+api: 5.0.0
 main: ColorMatch\ColorMatch
 author: CreeperFace
 description: The game in where you find and get to the right color in a certain time limit, last one standing wins.
